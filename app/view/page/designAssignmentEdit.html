@@ -1,0 +1,200 @@
+{% extends 'template/jhTemplate.html'%}
+
+{% block vue_template %}
+
+<jh-layout>
+
+  <v-container class="fullScreen d-flex flex-column pa-xs-0 pa-0">
+    <v-app-bar style="margin-top: 55px;" dense clipped-left clipped-right app color="blue darken-3" dark>
+      <v-btn large icon>
+          <v-icon>mdi-volleyball</v-icon>
+      </v-btn>
+      <v-toolbar-title>{{ title }}</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-select class="mr-2" v-model="selectedVersion" :items="versionList" style="max-width: 120px;"
+        label="版本" hide-details dense outlined hide-no-data />
+      <v-btn class="mr-2" @click="doUiAction('createArticleAssignmentVersion')">新增版本</v-btn>
+      <v-btn class="mr-2" @click="formItemListPreview">预览</v-btn>
+      <v-btn color="success" dark class="elevation-0 mr-2" @click="doUiAction('saveArticleAssignment')">保存</v-btn>
+      <v-btn color="error" disabled dark class="elevation-0 mr-2" @click="doUiAction('publishArticleAssignment')">发布</v-btn>
+    </v-app-bar>
+
+    <div style="height: 60px;"></div>
+
+    <form-item-list-generator v-if="articleAssignmentListWithAnswer[selectedVersionIndex]"
+      :form-item-list="articleAssignmentListWithAnswer[selectedVersionIndex].formItemList"
+      ref="formItemListGenerator"/>
+
+    <v-navigation-drawer v-model="formItemListPreviewDrawer" fixed temporary hide-overlay bottom width="90%">
+      <v-toolbar dark class="blue darken-3" dense>
+          <v-toolbar-title>表单预览</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-toolbar-items>
+              <v-btn dark text @click="formItemListPreviewDrawer = false">关闭</v-btn>
+          </v-toolbar-items>
+      </v-toolbar>
+      <v-card class="mt-3">
+          <v-row>
+              <v-col cols="12" md="6" class="pa-0">
+                <codemirror v-model="JSON.stringify(formItemList, null, 4)" :options="codemirrorOptions"/>
+              </v-col>
+              <v-col cols="12" md="6">
+                <form-item-list-render :form-item-list="formItemList"></form-item-list-render>
+              </v-col>
+          </v-row>
+      </v-card>
+    </v-navigation-drawer>
+
+  </v-container>
+</jh-layout>
+
+{% endblock %}
+
+{% block vue_body %}
+
+{% include 'layout/jhLayout.html' %}
+{% include 'component/formItemListGenerator.html' %}
+{% include 'component/formItemListRender.html' %}
+
+<!-- https://codemirror.net/theme/ -->
+<link href="https://codemirror.net/lib/codemirror.css" rel="stylesheet">
+<link href="https://codemirror.net/theme/material-darker.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-codemirror@4.0.0/dist/vue-codemirror.js"></script>
+<script type="text/javascript">
+  Vue.use(window.VueCodemirror)
+</script>
+
+<script type="module">
+  new Vue({
+    el: '#app',
+    template: '#app-template',
+    vuetify: new Vuetify(),
+    vueComponent: 'root',
+    mixins: [window.jianghuUiActionMixins],
+    data: () => ({
+      formItemListPreviewDrawer: false,
+      articleId: null,
+      article: null,
+      title: null,
+      selectedVersion: null,
+      articleAssignmentListWithAnswer: [],
+      codemirrorOptions: {
+        mode: 'application/json' ,
+        theme: 'material-darker',
+        indentUnit: 4,
+        smartIndent: false,
+        tabSize: 4,
+        indentWithTabs: true,
+      }
+    }),
+    computed: {
+      selectedVersionIndex () {
+        const index = this.articleAssignmentListWithAnswer.findIndex(item => item.version === this.selectedVersion);
+        return index;
+      },
+      versionList () {
+        const list = this.articleAssignmentListWithAnswer.map(item => {
+          return { text: item.version, value: item.version }
+        })
+        return list;
+      },
+      formItemList () {
+        let list = []
+        if (this.articleAssignmentListWithAnswer[this.selectedVersionIndex]) {
+          list = this.articleAssignmentListWithAnswer[this.selectedVersionIndex].formItemList;
+        }
+        return list;
+      }
+    },
+    watch: {},
+    async created() {
+      const urlParams = new URLSearchParams(location.search);
+      const articleId = urlParams.get('id');
+      if (articleId) {
+        this.articleId = articleId;
+      }
+      this.doUiAction('selectArticleAssignment', {articleId});
+    },
+    mounted() {},
+    methods: {
+      async selectArticleAssignment({articleId}) {
+        const result = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'designAssignmentEdit',
+              actionId: 'selectAssignment',
+              where: { id: articleId }
+            }
+          }
+        });
+
+        if (result.data.appData.resultData.rows.length < 1) {
+          window.vtoast.fail("文章不存在");
+          return;
+        }
+
+        this.article = result.data.appData.resultData.rows[0];
+        const articleAssignmentListWithAnswer = JSON.parse(this.article.articleAssignmentListWithAnswer || '[]');
+        if (articleAssignmentListWithAnswer.length === 0) {
+          articleAssignmentListWithAnswer.push({
+            version: 1,
+            formItemList: [],
+          })
+        }
+        this.articleAssignmentListWithAnswer = articleAssignmentListWithAnswer;
+        this.selectedVersion = this.articleAssignmentListWithAnswer[0].version;
+      },
+      formItemListPreview() {
+        this.formItemListPreviewDrawer = true;
+      },
+      async saveArticleAssignment () {
+        if (!this.article) {
+          window.vtoast.fail("文章不存在");
+          return;
+        }
+
+        const articleAssignmentList = this.articleAssignmentListWithAnswer.map(item => {
+          const newItem = _.cloneDeep(item);
+          newItem.formItemList.forEach(formItem => {
+            formItem.answerData = {};
+          })
+          return newItem;
+        })
+        window.vtoast.loading("保存");
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'designAssignmentEdit',
+              actionId: 'updateAssignment',
+              actionData: {
+                articleAssignmentListWithAnswer: JSON.stringify(this.articleAssignmentListWithAnswer),
+                articleAssignmentList: JSON.stringify(articleAssignmentList),
+              },
+              where: { id: this.articleId }
+            }
+          }
+        });
+        window.vtoast.success("保存成功");
+      },
+      createArticleAssignmentVersion () {
+        const newVersion = this.articleAssignmentListWithAnswer[0].version + 1;
+        this.articleAssignmentListWithAnswer.unshift({
+          version: newVersion,
+          formItemList: [],
+        });
+        this.selectedVersion = newVersion;
+      },
+    },
+  })
+</script>
+
+<style scoped>
+html {
+  height: 100vh;
+  overflow-y: hidden;
+  min-width: 950px;
+  overflow-x: scroll;
+}
+</style>
+{% endblock %}
