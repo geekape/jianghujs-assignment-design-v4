@@ -21,9 +21,9 @@
 
 ```sql
 # 数据库初始化
-create database `jianghujs_demo_basic` default character set utf8mb4 collate utf8mb4_bin;
-use jianghujs_demo_basic;
-# 运行 sql/init.sql 文件
+create database `jianghu_demo_assignment` default character set utf8mb4 collate utf8mb4_bin;
+use jianghu_demo_assignment;
+# 运行 sql/_init_.sql 文件
 ```
 
 ## 端口
