@@ -38,5 +38,5 @@ use jianghu_demo_assignment;
 
 1. 操作手册 @雪园 https://docsify.js.org/#/zh-cn/quickstart
 2. 布置演示 ✅
-3. 做作业演示 ✅
+3. 做作业演示 ✅(演示做作业用户为当前登录用户)
 4. 作业批改 ❌
