@@ -1,0 +1,165 @@
+{% extends 'template/jhTemplate.html'%}
+
+{% block vue_template %}
+
+<!--xfComments.html start-->
+<jh-layout>
+  <div class="right-box" style="display: flex; flex-direction: column; overflow-y: auto; padding: 10px">
+    <v-expansion-panels focusable multiple v-model="rightPanels" style="width: 500px; margin: 0 auto">
+      <v-expansion-panel
+        v-for="(item,i) in articleAssignmentList"
+        :key="i"
+      >
+        <v-expansion-panel-header>
+          作业版本【{{item.version}}】
+          <v-spacer></v-spacer>
+          <v-btn elevation="0"  v-if="rightPanels.includes(i)" :loading="saveing" small style="max-width: 60px" color="primary" dark @click.stop="doUiAction('submitArticleAssignment', {index: i})" >
+            保存
+          </v-btn>
+        </v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <div style="flex: 1;" class="noteTextareaBox">
+            <form-item-list-render :form-item-list="item.formItemList"></form-item-list-render>
+            <!-- <textarea id="noteTextarea" placeholder="随时记录您的阅读笔记......" hide-details outlined name="input-7-4"
+                @blur="submitNode" label="评论" v-model="articleNote.noteContent">
+            </textarea> -->
+          </div>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+    </v-expansion-panels>
+  </div>
+</jh-layout>
+
+
+{% endblock %}
+
+{% block vue_body %}
+{% include 'layout/jhLayout.html' %}
+{% include 'component/formItemListRender.html' %}
+<script type="module">
+  new Vue({
+    el: '#app',
+    template: '#app-template',
+    vuetify: new Vuetify(),
+    mixins: [window.jianghuUiActionMixins],
+    data: () => ({
+      rightPanels: [0],
+      saveing: false,
+      articleAssignmentList: [],
+      article: {},
+      userInfo: {}
+    }),
+    computed: {
+      isApp() {
+        try {
+          return !!xuanfengApp;
+        } catch (err) {
+          return false;
+        }
+      },
+      isMobile() {
+        return window.innerWidth < 600;
+      }
+    },
+    created() {
+      const urlParams = new URLSearchParams(location.search);
+      this.articleId = urlParams.get('id');
+      this.doUiAction('mineAssignment', {articleId: this.articleId});
+      this.doUiAction('getLoginUserInfo');
+    },
+    watch: {
+      articleNote: {
+        deep: true,
+        handler(value) { }
+      }
+    },
+    mounted() {
+    },
+    methods: {
+      async mineAssignment({articleId}) {
+        const result = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'assignmentHomework',
+              actionId: 'selectArticleAssignmentList',
+              actionData: { articleId: articleId }
+            }
+          }
+        });
+        if (result.data.appData.rows.length) {
+          this.articleAssignmentList = result.data.appData.rows;
+        }
+      },
+
+      // 获取用户信息
+      async getLoginUserInfo() {
+        this.userInfo = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'allPage',
+              actionId: 'userInfo',
+              actionData: {},
+            }
+          }
+        }).then(response => {
+          return response.data.appData;
+        }).catch(err => {
+          const {response} = err
+          if (response.data.appData) {
+            return response.data.appData;
+          }
+        });
+      },
+      async submitArticleAssignment ({index}) {
+        const articleAssignment = this.articleAssignmentList[index];
+        const { id, version, formItemList } = articleAssignment;
+        if (!this.articleId) {
+          window.vtoast.fail("数据异常");
+        }
+        this.saveing = true;
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: "assignmentHomework",
+              actionId: id ? "updateItem" : "insertItem",
+              where: id ? { id } : {},
+              actionData: {
+                articleId: this.articleId,
+                userId: this.userInfo.userId,
+                assignmentVersion: version,
+                assignmentFormItemList: JSON.stringify(formItemList),
+              }
+            }
+          }
+        })
+        this.saveing = false;
+        window.vtoast.success("保存成功");
+      },
+      dayjs: dayjs
+    }
+  })
+</script>
+<style>
+
+
+    @media screen and (max-width: 600px) {
+        .right-box {
+            padding-bottom: 130px !important;
+        }
+    }
+
+    .right-box .v-expansion-panel .v-expansion-panel-header {
+        min-height: auto;
+    }
+    .right-box .v-expansion-panel-content__wrap {
+        padding: 0px;
+    }
+
+    .right-box .v-expansion-panel .v-list-item__action, .v-list-item__avatar, .v-list-item__icon {
+        display: inline-block;
+        min-width: 24px;
+    }
+</style>
+<!--xfComments.html end-->
+
+{% endblock %}
