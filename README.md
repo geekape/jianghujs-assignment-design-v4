@@ -28,7 +28,7 @@ use jianghu_demo_assignment;
 
 ## 端口
 
-7002
+7007
 
 ## 测试账号 & 测试环境
 
