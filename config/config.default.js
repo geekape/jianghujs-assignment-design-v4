@@ -16,7 +16,7 @@ module.exports = appInfo => {
   return {
     appId,
     debug: false,
-    appTitle: '江湖演示-进阶',
+    appTitle: '江湖演示-作业设计',
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'single', // single: 单应用; multiApp: 多应用
     appDirectoryLink: '/',
