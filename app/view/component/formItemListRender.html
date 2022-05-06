@@ -6,24 +6,27 @@
           <v-list-item-content v-if="formItem.component.type === 'singleSelect'">
             <v-list-item-title class="formItem-title">{{ index+1 }}、 {{ formItem.component.outline }}</v-list-item-title>
             <v-radio-group v-model="formItem.answerData.selected">
-              <v-radio v-for="(option, optionIndex) in formItem.component.property.selectOptionList" :key="optionIndex" :label="option.value" :value="option.value"></v-radio>
+              <v-radio :disabled="isCorrecting" v-for="(option, optionIndex) in formItem.component.property.selectOptionList" :key="optionIndex" :label="option.value" :value="option.value"></v-radio>
             </v-radio-group>
+            <form-item-action v-if="isCorrecting" :data="formItem.check"></form-item-action>
           </v-list-item-content>
 
           <v-list-item-content v-if="formItem.component.type === 'multipleSelect'">
             <v-list-item-title class="formItem-title">{{ index+1 }}、 {{ formItem.component.outline }}</v-list-item-title>
             <div v-for="(option, optionIndex) in formItem.component.property.selectOptionList" :key="optionIndex">
-              <v-checkbox style="margin-top: 0px;" v-model="formItem.answerData[option.value]" :label="option.value" hide-details color="red"></v-checkbox>
+              <v-checkbox :disabled="isCorrecting" style="margin-top: 0px;" v-model="formItem.answerData[option.value]" :label="option.value" hide-details color="red"></v-checkbox>
             </div>
+            <form-item-action v-if="isCorrecting" :data="formItem.check"></form-item-action>
           </v-list-item-content>
 
           <v-list-item-content v-if="formItem.component.type === 'questionAnswer'">
             <v-list-item-title class="formItem-title">{{ index+1 }}、 {{ formItem.component.outline }}</v-list-item-title>
             <v-row>
               <v-col cols="12">
-                <v-textarea outlined placeholder="请输入答案" v-model="formItem.answerData.answer" :rows="4"/>
+                <v-textarea :disabled="isCorrecting" outlined placeholder="请输入答案" v-model="formItem.answerData.answer" :rows="4"/>
               </v-col>
             </v-row>
+            <form-item-action v-if="isCorrecting" :data="formItem.check"></form-item-action>
           </v-list-item-content>
         </v-list-item>
       </v-card>
@@ -35,18 +38,30 @@
 <script>
   Vue.component("form-item-list-render", {
     template: '#form-item-list-render',
+    mixins: [ window.jianghuUiActionMixins ],
     vuetify: new Vuetify(),
+    vueComponent: "formItemListRender",
     name: 'form-item-list-render',
     props: {
         formItemList: {
           type: Array,
-          default: [],
+          default: () => {
+            return []
+          },
           required: true,
+        },
+        action: {
+          type: String,
+          default: '',
         },
     },
     data: () => ({
     }),
-    computed: {},
+    computed: {
+      isCorrecting() {
+        return this.action === 'correcting'
+      }
+    },
     destroyed() {},
     watch: {},
     async created() {},
@@ -57,5 +72,24 @@
 <style scoped>
 .formItem-title {
   white-space: normal;
+}
+.correct {
+    border-top: 1px solid #999;
+    padding-top: 10px;
+}
+.correct-title-box .successText {
+    color: rgb(1, 166, 46);
+    font-weight: bold;
+}
+.correct-title-box .failText {
+    color: darkred;
+    font-weight: bold;
+}
+.correct-title-box {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
 }
 </style>

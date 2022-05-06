@@ -11,12 +11,12 @@
       </v-btn>
       <v-toolbar-title>{{ title }}</v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-select class="mr-2" v-model="selectedVersion" :items="versionList" style="max-width: 120px;"
-        label="版本" hide-details dense outlined hide-no-data />
-      <v-btn class="mr-2" @click="doUiAction('createArticleAssignmentVersion')">新增版本</v-btn>
+<!--      <v-select class="mr-2" v-model="selectedVersion" :items="versionList" style="max-width: 120px;"-->
+<!--        label="版本" hide-details dense outlined hide-no-data />-->
+<!--      <v-btn class="mr-2" @click="doUiAction('createArticleAssignmentVersion')">新增版本</v-btn>-->
       <v-btn class="mr-2" @click="formItemListPreview">预览</v-btn>
       <v-btn color="success" dark class="elevation-0 mr-2" @click="doUiAction('saveArticleAssignment')">保存</v-btn>
-      <v-btn color="error" disabled dark class="elevation-0 mr-2" @click="doUiAction('publishArticleAssignment')">发布</v-btn>
+<!--      <v-btn color="error" disabled dark class="elevation-0 mr-2" @click="doUiAction('publishArticleAssignment')">发布</v-btn>-->
     </v-app-bar>
 
     <div style="height: 60px;"></div>
@@ -110,7 +110,7 @@
     watch: {},
     async created() {
       const urlParams = new URLSearchParams(location.search);
-      const articleId = urlParams.get('id');
+      const articleId = urlParams.get('articleId');
       if (articleId) {
         this.articleId = articleId;
       }

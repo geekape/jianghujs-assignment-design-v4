@@ -38,6 +38,7 @@
         <v-btn small class="mr-2 success" @click="doUiAction('startUpdateItem', {item})">编辑</v-btn>
         <v-btn small class="mr-2 success" @click="doUiAction('assignmentDesignPage', {item})">编辑作业</v-btn>
         <v-btn small class="mr-2 success" @click="doUiAction('homeworkPage', {item})">模拟做作业</v-btn>
+        <v-btn small class="mr-2 success" @click="doUiAction('assignmentManagement', {item})">批改作业</v-btn>
         <v-btn small class="mr-2 error" @click="doUiAction('deleteItem', {item})">删除</v-btn>
       </template>
     </v-data-table>
@@ -109,7 +110,7 @@
       serverSearchInput: {
         assignmentName: null,
         categoryId: "all",
-        categoryName: "全部类目",
+        categoryName: "筛选版本",
         articlePublishStatus: ['login'],
         isFirstSearch: true,
         searchSummary: null,
@@ -293,11 +294,15 @@
       },
       goToAssignmentDesignPage({item}) {
         const { id } = item;
-        window.open(`/${window.appInfo.appId}/page/designAssignmentEdit?id=${id}`, '_blank');
+        window.open(`/${window.appInfo.appId}/page/designAssignmentEdit?articleId=${id}`, '_self');
       },
       goHomeworkPage({item}) {
         const { id } = item;
-        window.open(`/${window.appInfo.appId}/page/assignmentHomework?id=${id}`, '_blank');
+        window.open(`/${window.appInfo.appId}/page/assignmentHomework?articleId=${id}`, '_self');
+      },
+      goAssignmentManagement({item}) {
+        const { id } = item;
+        window.open(`/${window.appInfo.appId}/page/assignmentHomework?articleId=${id}&action=correcting`, '_self');
       },
     }
   })
