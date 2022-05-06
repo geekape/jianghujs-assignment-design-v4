@@ -52,18 +52,17 @@ class AssignmentService extends Service {
       if (userAssignment) {
         item.formItemList = JSON.parse(userAssignment.assignmentFormItemList);
         item.id = userAssignment.id;
-        console.log(articleAssignmentListAnswer)
-        for (const it of item.formItemList) {
-          const cache = articleAssignmentListAnswer[0].formItemList.find(e => e.id === it.id);
+      }
+      for (const it of item.formItemList) {
+        const cache = articleAssignmentListAnswer[0].formItemList.find(e => e.id === it.id);
 
-          it.check = {
-            grade: it.hasOwnProperty('check') ? it.check.grade : '',
-            remark: it.hasOwnProperty('check') ? it.check.remark : '',
-            answer: this.getAnswerData(cache.component.title, cache.answerData),
-            isRight: this.checkAnswer(it.component.title, it.answerData, cache.answerData)
-          }
-
+        it.check = {
+          grade: it.hasOwnProperty('check') ? it.check.grade : '',
+          remark: it.hasOwnProperty('check') ? it.check.remark : '',
+          answer: this.getAnswerData(cache.component.title, cache.answerData),
+          isRight: this.checkAnswer(it.component.title, it.answerData, cache.answerData)
         }
+
       }
 
     }
