@@ -30,7 +30,7 @@ module.exports = appInfo => {
           port: 3306,
           user: 'root',
           password: '123456',
-          database: 'jianghujs_demo_advanced',
+          database: 'jianghujs_assignment',
         },
         pool: { min: 0, max: 100 },
         acquireConnectionTimeout: 30000,

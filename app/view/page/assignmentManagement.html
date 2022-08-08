@@ -1,0 +1,421 @@
+{% extends 'template/jhTemplateV3.html'%}
+
+{% block vue_template %}
+
+<jh-layout-v3>
+
+<template slot="serverSearch">
+  <v-row class="ma-0 align-center flex-none pa-0" :class="{'pa-2': !isMobile, 'pa-2': isMobile}" align="center" style="height: 100%;">
+    <v-spacer></v-spacer>
+    <v-col cols="12" xs="6" sm="3" md="3" xl="3" class="pa-xs-0 pa-xs-2 col-sm-8-flex">
+      <v-select
+        :items="constantCollection.assignmentSubmitStatus"
+        dense filled single-line 
+        item-text="text"
+        item-value="value"
+        class="cus-v-input"
+        prefix="提交状态"
+        multiple
+        v-model="serverSearchInput.assignmentSubmitStatus"
+      ></v-select>
+    </v-col>
+    <v-col cols="12" xs="6" sm="3" md="3" xl="3" class="pa-xs-0 pa-xs-2 col-sm-8-flex">
+      <v-select
+        :items="constantCollection.assignmentReviewStatus"
+        dense filled single-line 
+        item-text="text"
+        item-value="value"
+        class="cus-v-input"
+        prefix="批改状态"
+        multiple
+        v-model="serverSearchInput.assignmentReviewStatus"
+      ></v-select>
+    </v-col>
+    <v-btn color="success" dark class="elevation-0 mr-2" @click="doUiAction('refreshTableData')">查询</v-btn>
+  </v-row>
+</template>
+<!-- 页面主要内容 -->
+<v-container class="fullScreen d-flex flex-column pa-xs-0 pa-0">
+  <v-card>
+    <v-row class="ma-0 pa-xs-4 align-center flex-none pt-0 " :class="{'pa-4': !isMobile, 'pb-0': !isMobile, 'pa-2': isMobile}">
+      <v-col cols="12" xs="4" sm="4" md="4" xl="4" class="pl-0">
+        <span style="margin-right: 10px;">{{serverSearchInput.searchSummary}}</span>  
+        <span class="body-2">共{{ tableData.length || 0 }}条记录</span>
+      </v-col>
+
+      <v-spacer></v-spacer>
+      
+      <v-col cols="12" xs="6" sm="3" md="3" xl="3" class="pa-xs-0 pa-xs-2 col-sm-8-flex">
+        <v-text-field small v-model="searchInput"  color="success" prefix="表格过滤：" class="cus-v-input" dense filled single-line></v-text-field>
+      </v-col>
+    </v-row>
+    <v-data-table fixed-header
+                  :headers="headers"
+                  :items="tableData"
+                  :search="searchInput"
+                  :footer-props="{ itemsPerPageOptions: [20, 40, 60, 100, -1] }"
+                  :items-per-page="20"
+                  mobile-breakpoint="0"
+                  :loading="isTableLoading"
+                  checkbox-color="success"
+                  class="elevation-0 mt-0 mb-xs-4 flex-fill d-flex flex-column">
+      <template v-slot:item.assignmentSubmitStatus="{ item }">
+        {{ assignmentSubmitStatusMap[item.assignmentSubmitStatus] || item.articlePublishStatus }}
+      </template>
+      <template v-slot:item.assignmentReviewStatus="{ item }">
+        {{ assignmentReviewStatusMap[item.assignmentReviewStatus] || item.assignmentReviewStatus }}
+      </template>    
+      <template v-slot:item.action="{ item }">
+        <!-- <v-btn small v-if="item.assignmentSubmitStatus === 'publish' && item.assignmentReviewStatus !== 'publish'" color="warning" class="mr-2" @click="doUiAction('cancelSubmit', { item })">撤销提交</v-btn> -->
+        <v-btn small color="warning" class="mr-2" @click="goToAssignmentReviewPage({ item })">批改</v-btn>
+      </template>
+    </v-data-table>
+  </v-card>
+</v-container>
+
+<!-- 编辑抽屉 -->
+<v-navigation-drawer v-model="isEditDrawerShow" :permanent="isEditDrawerShow" fixed temporary right width="80%" class="elevation-24">
+  <v-form v-model="isFormValid" v-if="isEditDrawerShow" ref="form" lazy-validation>
+    <v-row class="pt-8">
+      <span class="title pa-6" :class="{'pl-12': !isMobile, 'pl-6': isMobile}">{{ currentClickButton.title }}信息</span>
+      <v-spacer></v-spacer>
+      <v-btn class="mt-6 elevation-0" :class="{'mr-16': !isMobile, 'mr-8': isMobile}" fab x-small @click="isEditDrawerShow = false">
+        <v-icon dark>mdi-close</v-icon>
+      </v-btn>
+    </v-row>
+    <v-row :class="{'px-10': !isMobile, 'px-3': isMobile, 'pb-7': isMobile}">
+      <v-col cols="12" sm="12" md="4" xl="3" :class="{'pa-0': isMobile, 'px-3': isMobile, 'pt-6': isMobile}">
+        <span class="inputLabel">文章ID</span>
+        <v-text-field class="cus-v-input mr-2" dense filled single-line label="文章ID" v-model="editItem['articleId']"></v-text-field>
+      </v-col>
+       
+      <v-col cols="12" sm="12" md="4" xl="3" :class="{'pa-0': isMobile, 'px-3': isMobile, 'pt-6': isMobile}">
+        <span class="inputLabel">用户ID</span>
+        <v-text-field class="cus-v-input mr-2" dense filled single-line label="用户ID" v-model="editItem['userId']"></v-text-field>
+      </v-col>
+       
+      <v-col cols="12" sm="12" md="4" xl="3" :class="{'pa-0': isMobile, 'px-3': isMobile, 'pt-6': isMobile}">
+        <v-text-field class="cus-v-input mr-2" dense filled single-line label="作业内容" v-model="editItem['assignmentFormItemList']"></v-text-field>
+      </v-col>
+       
+<!--      <v-col cols="12" sm="12" md="4" xl="3" :class="{'pa-0': isMobile, 'px-3': isMobile, 'pt-6': isMobile}">-->
+<!--        &lt;!&ndash; 必填字段样式 demo :rules="requireRules" &ndash;&gt;-->
+<!--        <v-text-field class="cus-v-input mr-2" dense filled single-line label="学生ID" v-model="editItem.studentId" :rules="requireRules"></v-text-field>-->
+<!--      </v-col>-->
+<!--      &lt;!&ndash; select 字段 demo &ndash;&gt;-->
+<!--      <v-col cols="12" sm="12" md="4" xl="3" :class="{'pa-0': isMobile, 'px-3': isMobile, 'pt-6': isMobile}">-->
+<!--        <v-select class="cus-v-input mr-2" dense filled single-line clearable label="班级ID" v-model="editItem.classId" :items="constantCollection.classId"></v-select>-->
+<!--      </v-col>-->
+<!--      &lt;!&ndash; 日期选择 demo &ndash;&gt;-->
+<!--      <v-col cols="12" sm="12" md="4" xl="3" :class="{'pa-0': isMobile, 'px-3': isMobile, 'pt-6': isMobile}">-->
+<!--        <v-menu class="cus-v-input mr-2" offset-y max-width="290">-->
+<!--          <template v-slot:activator="{ on, attrs }">-->
+<!--            <v-text-field class="cus-v-input mr-2" dense filled single-line v-on="on" label="出生日期" v-model="editItem.dateOfBirth"></v-text-field>-->
+<!--          </template>-->
+<!--          <v-date-picker color="success" elevation="20" v-model="editItem.dateOfBirth"></v-date-picker>-->
+<!--        </v-menu>-->
+<!--      </v-col>-->
+    </v-row>
+    <v-row class="justify-end mx-0 mt-8" :class="{'px-10': !isMobile, 'px-4': isMobile, 'mb-8': isMobile}">
+      <v-btn color="success" small @click="doUiAction(dialogSaveInfoAction)">保存</v-btn>
+      <v-btn class="ml-2" small @click="isEditDrawerShow = false">取消</v-btn>
+    </v-row>
+  </v-form>
+</v-navigation-drawer>
+</jh-layout-v3>
+
+{% endblock %}
+
+{% block vue_body %}
+
+
+{% include 'component/singleSelectDialog.html' %}
+
+
+
+<script type="module">
+new Vue({
+  el: '#app',
+  template: '#app-template',
+  vuetify: new Vuetify(),
+  mixins: [window.jianghuUiActionMixins],
+  data: () => ({
+    // 表格相关数据
+    isFormValid: true,
+    requireRules: [
+      v => !!v || 'This is required',
+    ],
+    constantCollection: {
+      assignmentSubmitStatus: [
+        { text: "答题中", value: '' },
+        { text: "已提交", value: "publish" },
+      ],
+      assignmentReviewStatus: [
+        { text: "待批改", value: null },
+        { text: "已批改", value: "publish" },
+      ],
+      
+    },
+
+    serverSearchInput: {
+      articleTitle: null,
+      isFirstSearch: true,
+      assignmentSubmitStatus: ['publish'],
+      assignmentReviewStatus: [null],
+    },
+    selectAlbumDialog: false,
+    currentTableGenderType: 'all',
+    isEditDrawerShow: false,
+    searchInput: null,
+    isTableLoading: true,
+    tableDataFromBackend: [],
+    headers: [
+      {text: "ID", value: "id", width: 120, class: 'fixed', cellClass: 'fixed'},
+      {text: "文章标题", value: "articleTitle", width: 120}, 
+      {text: "学生ID", value: "userId", width: 120}, 
+      {text: "分数", value: "assignmentScore", width: 120}, 
+      {text: "提交状态", value: "assignmentSubmitStatus", width: 120}, 
+      {text: "批改状态", value: "assignmentReviewStatus", width: 120}, 
+      {text: "提交时间", value: "assignmentSubmitAt", width: 120}, 
+      {text: "批改人", value: "operationByUser", width: 120}, 
+      {text: "操作时间", value: "operationAt", width: 250},
+      {text: '操作', value: 'action', align: 'center', sortable: false, width: 150, class: 'fixed', cellClass: 'fixed'},
+    ],
+
+    currentClickButton: {title: '新增', action: 'add'},
+    editItem: {},
+    tableButtonList: [
+      {text: '修改', buttonType: 'edit', color: 'success', action: 'startUpdateItem'},
+      {text: '删除', buttonType: 'delete', color: 'error', action: 'deleteItem'},
+    ],
+    dialogSaveInfoAction: ''
+  }),
+  computed: {
+    isMobile() {
+      return window.innerWidth < 600;
+    },
+    tableData() {
+      if (!this.currentTableGenderType || this.currentTableGenderType === 'all') {
+        return this.tableDataFromBackend;
+      }
+      return this.tableDataFromBackend.filter(({gender}) => gender === this.currentTableGenderType);
+    },
+    computedEditItem() {
+      return this.editItem;
+    },
+    assignmentSubmitStatusMap() {
+      const map = {};
+      this.constantCollection.assignmentSubmitStatus.forEach(constantObj => {
+        map[constantObj.value] = constantObj.text;
+      })
+      return map;
+    },
+    assignmentReviewStatusMap() {
+      const map = {};
+      this.constantCollection.assignmentReviewStatus.forEach(constantObj => {
+        map[constantObj.value] = constantObj.text;
+      })
+      return map;
+    },
+    
+  },
+  watch: {},
+  async created() {
+    await this.doUiAction('refreshTableData');
+  },
+  mounted() {},
+  methods: {
+    
+    /** 
+     * uiActionId:  refreshTableData
+     * description: ✅获取表格数据
+     * main:   [{"function":"refreshTableData"}]
+    */
+    async refreshTableData() {
+      this.isTableLoading = true;
+      const { albumTitle, albumId, assignmentReviewStatus, assignmentSubmitStatus } = this.serverSearchInput;
+      const { rows, count } = (await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'assignmentManagement',
+            actionId: 'selectItemList',
+            actionData: { assignmentSubmitStatus, assignmentReviewStatus },
+            orderBy: [{column: 'operationAt', order: 'desc'}],
+            limit: this.serverSearchInput.isFirstSearch ? 200 : 99999999,
+          }
+        }
+      })).data.appData.resultData;
+      const conditions = [];
+      if (albumId) {
+        conditions.push(`课程为【${albumTitle}】`);
+      }
+      this.tableDataFromBackend = rows;
+      this.isTableLoading = false;
+      // Tip 这个放最后
+      this.serverSearchInput.isFirstSearch  = false;
+    },
+
+    /** 
+     * uiActionId:  startCreateItem
+     * description: ✅获取表格数据
+     * main:   [{"function":"clearItemData"},{"function":"openCreateItemDialog"}]
+    */
+    async clearItemData() {
+      this.editItem = {};
+    },
+
+    async openCreateItemDialog() {
+      this.currentClickButton = {action: 'add', title: '新增'};
+      this.isEditDrawerShow = true;
+      this.dialogSaveInfoAction = 'createItem';
+    },
+
+    /** 
+     * uiActionId:  createItem
+     * description: ✅获取表格数据
+     * before: [{"function":"confirmCreateItemDialog"}]
+     * main:   [{"function":"doCreateItem"},{"function":"refreshTableData"}]
+     * after:  [{"function":"closeDrawerShow"}]
+    */
+    async confirmCreateItemDialog() {
+      return window.confirmDialog({title: '新增', content: '确定新增吗？'})
+    },
+
+    async doCreateItem() {
+      delete this.computedEditItem.id;
+      await window.vtoast.loading("新增数据");
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'assignmentManagement',
+            actionId: 'insertItem',
+            actionData: this.computedEditItem
+          }
+        }
+      })
+      await window.vtoast.success("新增数据成功");
+    },
+
+    async closeDrawerShow() {
+      this.isEditDrawerShow = false;
+    },
+
+    /** 
+     * uiActionId:  startUpdateItem
+     * description: ✅获取表格数据
+     * main:   [{"function":"prepareItemData"},{"function":"openUpdateDialog"}]
+    */
+    async prepareItemData({item}) {
+      this.editItem = {...item};
+    },
+
+    async openUpdateDialog() {
+      this.currentClickButton = {action: 'edit', title: '修改'};
+      this.isEditDrawerShow = true;
+      this.dialogSaveInfoAction = 'updateItem';
+    },
+
+    /** 
+     * uiActionId:  updateItem
+     * description: ✅获取表格数据
+     * before: [{"function":"confirmUpdateItemDialog"}]
+     * main:   [{"function":"doUpdateItem"},{"function":"refreshTableData"}]
+     * after:  [{"function":"closeDrawerShow"}]
+    */
+    async confirmUpdateItemDialog() {
+      return window.confirmDialog({title: '修改', content: '确定修改吗？'});
+    },
+
+    /**
+     * 保存数据
+     */
+    async doUpdateItem() {
+      const id = this.computedEditItem.id;
+      delete this.computedEditItem.id;
+      await window.vtoast.loading("修改数据");
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'assignmentManagement',
+            actionId: 'updateItem',
+            actionData: this.computedEditItem,
+            where: {id: id}
+          }
+        }
+      })
+      await window.vtoast.success("修改数据成功");
+    },
+
+    /** 
+     * uiActionId:  deleteItem
+     * description: ✅获取表格数据
+     * before: [{"function":"confirmDeleteItemDialog"}]
+     * main:   [{"function":"doDeleteItem"},{"function":"refreshTableData"}]
+    */
+    async confirmDeleteItemDialog() {
+      return window.confirmDialog({title: '删除', content: '确定删除吗？'});
+    },
+
+    async doDeleteItem({item}) {
+      const { id } = item;
+      await window.vtoast.loading("删除数据");
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'assignmentManagement',
+            actionId: 'deleteItem',
+            actionData: {},
+            where: { id: id }
+          }
+        }
+      });
+      await window.vtoast.success("删除数据成功");
+    },
+    getConstantCollectionItemText(key, _value) {
+      const constantCollectionItemFind = this.constantCollection[key].find(({value}) => value === _value);
+      if(constantCollectionItemFind) {
+        return constantCollectionItemFind.text;
+      }
+      return value;
+    },
+    
+    /** 
+     * uiActionId:  cancelSubmit
+     * description: 撤销提交
+     * main:   [{"function":"cancelSubmit"},{"function":"refreshTableData"}]
+    */
+    async cancelSubmit({item}) {
+      window.open(`/doc/page/assignmentManagement`);
+    },
+    goToAssignmentReviewPage({ item }) {
+      const { assignmentId, articleTitle, userId } = item;
+      window.open(`/${window.appInfo.appId}/page/assignmentReview?assignmentId=${assignmentId}&title=${userId}-${articleTitle}作业批改`, '_blank');
+    },
+    openSelectAlbumDialog() {
+      this.selectAlbumDialog = true
+    },
+    onSelectAlbum(item) {
+      this.serverSearchInput.albumId = item.value;
+      this.serverSearchInput.albumTitle = item.text;
+    },    
+  }
+})
+</script>
+
+<style>
+  .fullScreen {
+    min-height: 90vh;
+  }
+
+  .theme--light.v-data-table>.v-data-table__wrapper>table>tbody>tr>td:not(.v-data-table__mobile-row) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 500px;
+  }
+
+  .theme--light.v-data-table>.v-data-table__wrapper>table>tbody>tr {
+    cursor: pointer;
+  }
+</style>
+{% endblock %}

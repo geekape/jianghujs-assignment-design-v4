@@ -11,8 +11,8 @@ const timezone = require('dayjs/plugin/timezone') // dependent on utc plugin
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
-const idGenerateUtil = require("egg-jianghu/app/common/idGenerateUtil");
-const validateUtil = require("egg-jianghu/app/common/validateUtil");
+const idGenerateUtil = require("@jianghujs/jianghu/app/common/idGenerateUtil");
+const validateUtil = require("@jianghujs/jianghu/app/common/validateUtil");
 const { BizError, errorInfoEnum } = require("../constant/error");
 const fs = require("fs"),
     fsPromises = require("fs").promises,
@@ -51,52 +51,7 @@ class ArticleService extends Service {
       tableName,
       columnName,
     });
-    // 浏览器传过来的时间 要转成 Asia/Shanghai；
-    let { articlePublishTime } = this.ctx.request.body.appData.actionData;
-    if (articlePublishTime) {
-      articlePublishTime = dayjs(articlePublishTime).tz("Asia/Shanghai").format();
-    }
-    if (!dayjs(articlePublishTime).isValid()) {
-      articlePublishTime = dayjs().tz("Asia/Shanghai").format();
-    }    
-    Object.assign(this.ctx.request.body.appData.actionData, {
-      articleId,
-      articlePublishTime,
-      articleCreateTime: time,
-      articleCreateUserId: userId,
-      articleCreateUsername: username,
-      articleUpdateTime: time,
-      articleUpdateUserId: userId,
-      articleUpdateUsername: username,
-    })
-  }
-
-  async fillUpdateItemParamsBeforeHook() {
-    const { userId, username } = this.ctx.userInfo;
-    const time = dayjs().format();
-    // 浏览器传过来的时间 要转成 Asia/Shanghai；
-    let { articlePublishTime } = this.ctx.request.body.appData.actionData;
-    if (articlePublishTime) {
-      articlePublishTime = dayjs(articlePublishTime).tz("Asia/Shanghai").format();
-    }
-    if (!dayjs(articlePublishTime).isValid()) {
-      articlePublishTime = dayjs().tz("Asia/Shanghai").format();
-    }
-    Object.assign(this.ctx.request.body.appData.actionData, {
-      articlePublishTime,
-      articleUpdateTime: time,
-      articleUpdateUserId: userId,
-      articleUpdateUsername: username,
-    })
-  }
-
-  async articleHistoryRecordAfterHook() {
-    const { articleId } = this.ctx.request.body.appData.actionData;
-    if (articleId) {
-      // 保存新版本
-      const {id, ...history} = this.ctx.request.body.appData.actionData;
-      await this.app.jianghuKnex(tableEnum.article_history).insert(history);
-    }
+    Object.assign(this.ctx.request.body.appData.actionData, { articleId })
   }
 
   async deletedArticle() {

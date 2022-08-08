@@ -61,7 +61,7 @@
                       <v-list-item-title class="formItem-title">{{ index+1 }}、 {{ formItem.component.outline }}</v-list-item-title>
                       <v-row>
                         <v-col cols="12">
-                          <v-textarea dense outlined placeholder="请输入答案" v-model="formItem.answerData.answer" :rows="4"/>
+                          <v-textarea dense filled single-line placeholder="请输入答案" v-model="formItem.answerData.answer" :rows="4"/>
                         </v-col>
                       </v-row>
                     </v-list-item-content>
@@ -109,7 +109,7 @@
                     题纲
                   </v-expansion-panel-header>
                   <v-expansion-panel-content>
-                    <v-textarea v-model="formItemList[selectCanvaIndex].component.outline" dense outlined placeholder="请输入题纲"
+                    <v-textarea v-model="formItemList[selectCanvaIndex].component.outline" dense filled single-line placeholder="请输入题纲"
                       :rows="6"/>
                   </v-expansion-panel-content>
                 </v-expansion-panel>
@@ -133,7 +133,7 @@
                             <v-text-field
                               v-model="option.value"
                               label="选项"
-                              outlined
+                              filled single-line
                               dense
                               hide-details
                               clearable
@@ -163,7 +163,7 @@
               </v-expansion-panel-header>
               <v-expansion-panel-content>
                 <v-textarea v-model="formItemList[selectCanvaIndex].component.outline"
-                  dense outlined placeholder="请输入题纲"
+                  dense filled single-line placeholder="请输入题纲"
                   :rows="8"/>
               </v-expansion-panel-content>
             </v-expansion-panel>

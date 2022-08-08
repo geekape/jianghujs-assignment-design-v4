@@ -1,10 +1,10 @@
 'use strict';
 
-const { middleware, middlewareMatch } = require('egg-jianghu/config/middlewareConfig');
+const { middleware, middlewareMatch } = require('@jianghujs/jianghu/config/middlewareConfig');
 const path = require('path');
 const assert = require('assert');
-const eggJianghuPathTemp = require.resolve('egg-jianghu');
-const eggJianghuPath = path.join(eggJianghuPathTemp, '../');
+const jianghujsPathTemp = require.resolve('@jianghujs/jianghu');
+const jianghujsPath = path.join(jianghujsPathTemp, '../');
 
 module.exports = appInfo => {
   assert(appInfo);
@@ -20,10 +20,12 @@ module.exports = appInfo => {
     appLogo: `${appId}/public/img/logo.png`,
     appType: 'single', // single: 单应用; multiApp: 多应用
     appDirectoryLink: '/',
-    indexPage: `/${appId}/page/manual`,
+    indexPage: `/${appId}/page/assignmentManagement`,
     loginPage: `/${appId}/page/login`,
     helpPage: `/${appId}/page/help`,
     uploadDir,
+    primaryColor: "#4caf50",
+    primaryColorA80: "#EEF7EE",
     downloadBasePath,
     static: {
       maxAge: 0,
@@ -32,7 +34,7 @@ module.exports = appInfo => {
       maxFiles: 0,
       dir: [
         { prefix: `/${appId}/public/`, dir: path.join(appInfo.baseDir, 'app/public') },
-        { prefix: `/${appId}/public/`, dir: path.join(eggJianghuPath, 'app/public') },
+        { prefix: `/${appId}/public/`, dir: path.join(jianghujsPath, 'app/public') },
         { prefix: `/${appId}/upload/`, dir: uploadDir },
       ],
     },
@@ -41,7 +43,7 @@ module.exports = appInfo => {
       mapping: { '.html': 'nunjucks' },
       root: [
         path.join(appInfo.baseDir, 'app/view'),
-        path.join(eggJianghuPath, 'app/view'),
+        path.join(jianghujsPath, 'app/view'),
       ].join(','),
     },
     middleware,

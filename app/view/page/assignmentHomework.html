@@ -1,34 +1,44 @@
-{% extends 'template/jhTemplate.html'%}
+{% extends 'template/jhTemplateV3.html'%}
 
 {% block vue_template %}
 
 <!--xfComments.html start-->
-<jh-layout>
-  <div class="right-box" style="display: flex; flex-direction: column; overflow-y: auto; padding: 10px">
-    <v-expansion-panels focusable multiple v-model="rightPanels" style="width: 500px; margin: 0 auto">
-      <v-expansion-panel
-        v-for="(item,i) in articleAssignmentList"
-        :key="i"
-      >
-        <v-expansion-panel-header>
-          {{isCorrecting ? '作业批改':'模拟练习'}}
-          <v-spacer></v-spacer>
-          <v-btn elevation="0"  v-if="rightPanels.includes(i) && !isCorrecting" :loading="saveing" small style="max-width: 60px" color="primary" dark @click.stop="doUiAction('submitArticleAssignment', {index: i})" >
-            保存
-          </v-btn>
-        </v-expansion-panel-header>
-        <v-expansion-panel-content>
-          <div style="flex: 1;" class="noteTextareaBox">
-            <form-item-list-render :form-item-list="item.formItemList" :action="action"></form-item-list-render>
-            <!-- <textarea id="noteTextarea" placeholder="随时记录您的阅读笔记......" hide-details outlined name="input-7-4"
-                @blur="submitNode" label="评论" v-model="articleNote.noteContent">
-            </textarea> -->
-          </div>
-        </v-expansion-panel-content>
-      </v-expansion-panel>
-    </v-expansion-panels>
+<jh-layout-v3>
+  
+  <template slot="breadcrumbsTitle">
+    <span style="color: #999">作业-</span>
+    <span v-if="userAssignment && userAssignment.assignmentReviewStatus === 'publish'">
+    总得分【{{ userAssignment.assignmentScore }}】
+    </span>
+    <span v-else-if="userAssignment && userAssignment.assignmentSubmitStatus === 'publish'">
+    待批改
+    </span>
+    <span v-else>
+    待提交
+    </span>
+  </template>
+  <template slot="serverSearch">
+    <v-row class="ma-0 align-center pa-2" style="justify-content: end">
+      <v-col class="pl-0" style="max-width: 77px">
+        
+        <v-btn v-if="userAssignment && userAssignment.assignmentSubmitStatus !== 'publish'" elevation="0" style="max-width: 60px" color="green" dark
+        @click.stop="doUiAction('saveArticleAssignment')" :loading="saveing">
+    保存
+    </v-btn>
+      </v-col>
+      <v-col class="pl-0" style="max-width: 77px">
+        <v-btn v-if="userAssignment && userAssignment.assignmentSubmitStatus !== 'publish'" elevation="0" style="max-width: 60px; margin-left: 10px" color="primary" dark
+          @click.stop="doUiAction('submitArticleAssignment', {publish: 'publish'})" :loading="submiting">
+      提交
+    </v-btn>
+      </v-col>
+    </v-row>
+    
+  </template>
+  <div class="" v-if="userAssignment">
+    <form-item-list-render></form-item-list-render>
   </div>
-</jh-layout>
+</jh-layout-v3>
 
 
 {% endblock %}
@@ -38,15 +48,32 @@
   window.registerData({
     rightPanels: [0],
     saveing: false,
-    articleAssignmentList: [],
     article: {},
     userInfo: {},
-    action: ''
-  })
+    action: '',
+    submiting: null, //assignment
+    articleAssignment: {},
+    userAssignment: null,
+    assignmentReview: {},
+    userFileList: [],
+  }, {
+      isMobile() {
+        return window.innerWidth < 600;
+      },
+      isCorrecting() {
+        return this.action === 'correcting'
+      },
+      assignmentDisabled() {
+        return this.userAssignment && this.userAssignment.assignmentSubmitStatus === 'publish';
+      },
+      score() {
+        return this.userAssignment && this.userAssignment.assignmentReviewStatus === 'publish';
+      }
+    })
 </script>
-{% include 'layout/jhLayout.html' %}
 {% include 'component/formItemListRender.html' %}
 {% include 'component/formItemAction.html' %}
+{% include 'component/upload.html' %}
 <script type="module">
   new Vue({
     el: '#app',
@@ -55,27 +82,13 @@
     vueComponent: "homework",
     mixins: [window.jianghuUiActionMixins],
     data: () => window.vueData,
-    computed: {
-      isApp() {
-        try {
-          return !!xuanfengApp;
-        } catch (err) {
-          return false;
-        }
-      },
-      isMobile() {
-        return window.innerWidth < 600;
-      },
-      isCorrecting() {
-        return this.action === 'correcting'
-      }
-    },
     created() {
       const urlParams = new URLSearchParams(location.search);
       this.articleId = urlParams.get('articleId');
       this.action = urlParams.get('action');
-      this.doUiAction('mineAssignment', {articleId: this.articleId});
-      this.doUiAction('getLoginUserInfo');
+      // this.doUiAction('mineAssignment', {articleId: this.articleId});
+      this.doUiAction('getUserAssignment', {articleId: this.articleId});
+      // this.doUiAction('getLoginUserInfo');
     },
     watch: {
       articleNote: {
@@ -86,20 +99,6 @@
     mounted() {
     },
     methods: {
-      async mineAssignment({articleId}) {
-        const result = await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'assignmentHomework',
-              actionId: 'selectArticleAssignmentList',
-              actionData: { articleId: articleId }
-            }
-          }
-        });
-        if (result.data.appData.rows.length) {
-          this.articleAssignmentList = result.data.appData.rows;
-        }
-      },
 
       // 获取用户信息
       async getLoginUserInfo() {
@@ -120,32 +119,181 @@
           }
         });
       },
-      async submitArticleAssignment ({index}) {
-        const articleAssignment = this.articleAssignmentList[index];
-        const { id, version, formItemList } = articleAssignment;
+      async submitArticleAssignment(item) {
+        await this.saveArticleAssignment(item);
+      },
+      async saveArticleAssignment({publish, upload = false}) {
+        if (!upload && (this.assignmentLoading || this.saveing || this.submiting)) return ;
+        const {assignmentId, assignmentSubmitStatus} = this.userAssignment;
         if (!this.articleId) {
           window.vtoast.fail("数据异常");
+          return false;
+        }
+        if (!upload && assignmentSubmitStatus === 'publish') {
+          window.vtoast.fail("作业已提交，不能修改");
+          return false;
         }
 
-        window.vtoast.loading("保存中...");
-        this.saveing = true;
+        if (publish && publish === 'publish') {
+          this.submiting = true;
+        } else {
+          this.saveing = true;
+        }
+
+        const assignmentUploadData = [...this.userFileList];
+        if (this.userAssignment.assignmentId && !upload) {
+          await this.assignmentUpload({data: assignmentUploadData});
+        }
+        const {assignmentFormItemListWithUser} = this.userAssignment;
+        const actionData = {
+          albumId: this.albumId,
+          baofengGroupId: this.groupId,
+          articleId: this.articleId,
+          assignmentFormItemListWithUser: JSON.stringify(assignmentFormItemListWithUser),
+        }
+        if (publish && publish === 'publish') {
+          actionData.assignmentSubmitStatus = 'publish';
+          actionData.assignmentSubmitAt = dayjs(new Date()).format();
+        };
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: "assignmentHomework",
-              actionId: id ? "updateItem" : "insertItem",
-              where: id ? { id } : {},
-              actionData: {
-                articleId: this.articleId,
-                userId: this.userInfo.userId,
-                assignmentVersion: version,
-                assignmentFormItemList: JSON.stringify(formItemList),
-              }
+              pageId: 'assignmentHomework',
+              actionId: assignmentId ? "updateItem" : "insertItem",
+              where: assignmentId ? {assignmentId} : {},
+              actionData
             }
           }
         })
+        await this.getUserAssignment({articleId: this.articleId})
+        if (!assignmentId && !upload) {
+          await this.assignmentUpload({data: assignmentUploadData, load: true});
+        }
+        window.vtoast.success(this.submiting ? "提交成功" : "保存成功");
         this.saveing = false;
-        window.vtoast.success("保存成功");
+        this.submiting = false;
+      },
+      async getUserAssignment({articleId}) {
+        this.assignmentLoading = true;
+        const {rows} = (await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'assignmentHomework',
+              actionId: 'selectUserAssignmentList',
+              where: {
+                articleId,
+                baofengGroupId: this.groupId,
+                albumId: this.albumId,
+              }
+            }
+          }
+        })).data.appData.resultData;
+        if (rows.length) {
+          const userAssignment = rows[0];
+          userAssignment.assignmentFormItemListWithUser = JSON.parse(userAssignment.assignmentFormItemListWithUser || '[]');
+          const assignmentFormItemListWithAnswer = JSON.parse(userAssignment.assignmentFormItemListWithAnswer || '[]');
+          for(const item of userAssignment.assignmentFormItemListWithUser) {
+            const formItemWithAnswer = assignmentFormItemListWithAnswer.find(e => e.id === item.id);
+            const answerData = formItemWithAnswer.answerData || {};
+            item.answerData = answerData;
+            item.answerString = this.getAnswerString(item.component.title, answerData);
+            item.isRight = !Object.keys(item.userData).some(e => {
+              return item.userData[e] !== answerData[e];
+            });
+          }
+          this.userAssignment = userAssignment;
+          this.assignmentReview = JSON.parse(userAssignment.assignmentReview || '{}');
+        } else {
+          const {rows} = (await window.jianghuAxios({
+            data: {
+              appData: {
+                pageId: 'assignmentHomework',
+                actionId: 'selectArticleInfo',
+                where: {
+                  articleId
+                }
+              }
+            }
+          })).data.appData.resultData;
+          if (!rows.length) {
+            window.vtoast('不存在的文章')
+          }
+          this.articleAssignment = JSON.parse(rows[0].articleAssignment);
+          if (!this.articleAssignment) {
+            this.userAssignment = {};
+            return
+          }
+          for (const item of this.articleAssignment) {
+            item.userData = {}
+          }
+          if (!this.userAssignment) {
+            this.userAssignment = {assignmentFormItemListWithUser: this.articleAssignment || []};
+          }
+        }
+        _.forEach(this.userAssignment.assignmentFormItemListWithUser, (item, index) => {
+          const fileList = {}
+          for (const type in item.file) {
+            fileList[type] = item.file[type];
+          }
+          const fileType = [];
+          _.forEach(['img', 'audio', 'video'], (e, i) => {
+            if (item.upload.includes(e)) {
+              fileType.push(e)
+            }
+          })
+          this.userFileList.push({
+            id: item.id,
+            fileType,
+            fileList,
+          })
+        })
+        this.assignmentLoading = false;
+      },
+
+      getAnswerString(type, data) {
+        switch (type) {
+          case "单选":
+            return data.selected;
+          case "多选":
+            return Object.keys(data).join(',');
+          case "问答":
+            return data.answer;
+          default :
+            return 'default';
+        }
+      },
+      async assignmentUpload({data, load = false}) {
+        let i = 1;
+        let that = this;
+        for (const index in data) {
+          for (const type in data[index].fileList) {
+            const file = data[index].fileList[type];
+            if (file && typeof file !== 'string') {
+              window.vtoast.loading(`附件${i}上传 上传进度: 0.00%`);
+              const path =`/assignmentMaterial/${this.userInfo.userId}/${this.userAssignment.assignmentId}/`;
+              const {data: {status} } = await window.jianghuAxios.httpUploadByStream({
+                file,
+                filenameStorage: file.name,
+                fileDirectory: path,
+                onProgress: (total, loaded) => {
+                  that.progress = Number((loaded * 100 / total).toFixed(2));
+                  window.vtoast.loading(`附件${i}上传 上传进度: ${that.progress}%`);
+                  if (loaded === total) {
+                    window.vtoast.success(`附件${i}上传 上传进度: 100%`);
+                  }
+                }
+              });
+              i++
+              if (status === 'success') {
+                this.userAssignment.assignmentFormItemListWithUser[index].file[type] = path + file.name;
+                this.userFileList[index].fileList[type] = 'sss'
+              }
+            }
+          }
+        }
+        if (load) {
+          this.saveArticleAssignment({publish: '', upload: true})
+        }
       },
       dayjs: dayjs
     }
@@ -170,6 +318,9 @@
     .right-box .v-expansion-panel .v-list-item__action, .v-list-item__avatar, .v-list-item__icon {
         display: inline-block;
         min-width: 24px;
+    }
+    .v-list-item {
+        height: unset;
     }
 </style>
 <!--xfComments.html end-->

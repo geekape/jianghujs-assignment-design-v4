@@ -1,0 +1,313 @@
+{% extends 'template/jhTemplateV3.html'%}
+
+{% block vue_template %}
+
+<!-- 3 table 下 article 的单表 crud 页面 -->
+
+
+
+<jh-layout-v3>
+
+
+  <!-- 页面主要内容 -->
+  <v-container class="fullScreen d-flex flex-column pa-xs-0 pa-0">
+    <v-card>
+      <v-row class="ma-0 pa-xs-4 align-center flex-none pt-0 "
+        :class="{'pa-4': !isMobile, 'pb-0': !isMobile, 'pa-2': isMobile}">
+
+        <v-btn color="success" dark class="elevation-0 mr-2"
+        @click="doUiAction('startCreateItem')">新增</v-btn>
+        <span style="margin-right: 10px;">{{serverSearchInput.searchSummary}}</span>
+        <!-- <span class="body-2">共{{ tableData.length }}条记录</span> -->
+
+        <v-spacer></v-spacer>
+
+        <v-col cols="12" xs="8" sm="3" md="3" xl="3" class="pa-xs-0 pa-xs-2 col-sm-8-flex pl-0">
+          <v-text-field v-model="searchInput" prefix="结果过滤" class="cus-v-input" dense filled single-line></v-text-field>
+        </v-col>
+      </v-row>
+      <v-data-table fixed-header :headers="headers" :items="tableData" :search="searchInput"
+        :footer-props="{ itemsPerPageOptions: [-1, 20, 40, 60, 100, 200] }" :items-per-page="-1" mobile-breakpoint="0"
+        :loading="isTableLoading" checkbox-color="success" class="elevation-0">
+        <template v-slot:item.articlePublishStatus="{ item }">
+          {{ articlePublishStatusMap[item.articlePublishStatus] || item.articlePublishStatus }}
+        </template>
+        <template v-slot:item.action="{ item }">
+          <v-btn small class="mr-2 success" @click="doUiAction('startUpdateItem', {item})">编辑</v-btn>
+          <v-btn small class="mr-2 success" @click="doUiAction('assignmentDesignPage', {item})">编辑作业</v-btn>
+          <v-btn small class="mr-2 success" @click="doUiAction('homeworkPage', {item})">模拟做作业</v-btn>
+          <v-btn small class="mr-2 error" @click="doUiAction('deleteItem', {item})">删除</v-btn>
+        </template>
+      </v-data-table>
+    </v-card>
+  </v-container>
+
+  <!-- 编辑抽屉 -->
+  <v-navigation-drawer v-model="isEditDrawerShow" fixed temporary right width="80%"
+                        class="elevation-24">
+    <v-form v-model="isFormValid" v-if="isEditDrawerShow" ref="form" lazy-validation>
+      <v-row class="pt-8">
+        <span class="title pa-6" :class="{'pl-12': !isMobile, 'pl-6': isMobile}">{{ currentClickButton.title }}信息</span>
+        <v-spacer></v-spacer>
+        <v-btn class="mt-6 elevation-0" :class="{'mr-16': !isMobile, 'mr-8': isMobile}" fab x-small @click="isEditDrawerShow = false">
+          <v-icon dark>mdi-close</v-icon>
+        </v-btn>
+      </v-row>
+      <v-row :class="{'px-10': !isMobile, 'px-3': isMobile, 'pb-7': isMobile}">
+        <v-col cols="12" sm="12" md="4" xl="3" :class="{'pa-0': isMobile, 'px-3': isMobile, 'pt-6': isMobile}">
+          <span class="inputLabel">作业标题</span>
+          <v-text-field class="cus-v-input mr-2" dense filled single-line v-model="editItem.articleTitle" :rules="requireRules"></v-text-field>
+        </v-col>
+      </v-row>
+      <v-row class="justify-end pr-6">
+        <v-btn color="success" @click="doUiAction(dialogSaveInfoAction)" small :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}" :class="{'mb-2': isMobile, 'mr-4': isMobile}">保存</v-btn>
+        <v-btn class="ml-2" @click="isEditDrawerShow = false" small :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}" :class="{'mr-4': isMobile}">取消</v-btn>
+      </v-row>
+    </v-form>
+  </v-navigation-drawer>
+</jh-layout-v3>
+
+{% endblock %}
+
+{% block vue_body %}
+
+{% include 'layout/jhLayout.html' %}
+{% include 'common/resetTableMaxHeight.html' %}
+{% include 'component/singleSelectDialog.html' %}
+
+<script type="module">
+  new Vue({
+    el: '#app',
+    template: '#app-template',
+    vuetify: new Vuetify(),
+    mixins: [window.jianghuUiActionMixins],
+    data: () => ({
+      selectCategoryDialog: false,
+      // 表格相关数据
+      isFormValid: true,
+      requireRules: [
+        v => !!v || 'This is required',
+      ],
+      constantCollection: {
+        articlePublishStatus: [
+          { text: "登录可见", value: "login" },
+          { text: "草稿", value: "draft" },
+          { text: "回收站", value: "deleted" },
+        ],
+        allArticlePublishStatus: [
+          { text: "登录可见", value: "login" },
+          { text: "草稿", value: "draft" },
+          { text: "回收站", value: "deleted" },
+        ],
+        category: [
+          { text: "全部类目", value: "all" },
+        ],
+      },
+
+      categoryIdToName: {},
+      serverSearchInput: {
+        articleTitle: null,
+        categoryId: "all",
+        categoryName: "筛选版本",
+        articlePublishStatus: ['login'],
+        isFirstSearch: true,
+        searchSummary: null,
+      },
+      currentTableGenderType: 'all',
+      isEditDrawerShow: false,
+      searchInput: null,
+      isTableLoading: true,
+      tableDataFromBackend: [],
+      headers: [
+        { text: "ID", value: "articleId", width: 50, class: 'fixed', cellClass: 'fixed' },
+        { text: "作业标题", value: "articleTitle", width: 120 },
+        { text: "创建时间", value: "articleCreateTime", width: 220, edit: false },
+        { text: '操作', value: 'action', align: 'center', sortable: false, width: 350 },
+      ],
+
+      currentClickButton: { title: '新增', action: 'add' },
+      editItem: {},
+      dialogSaveInfoAction: ''
+    }),
+    computed: {
+      isMobile() {
+        return window.innerWidth < 600;
+      },
+      tableData() {
+        return this.tableDataFromBackend;
+      },
+      computedEditItem() {
+        return this.editItem;
+      },
+      articlePublishStatusMap() {
+        const map = {};
+        this.constantCollection.allArticlePublishStatus.forEach(constantObj => {
+          map[constantObj.value] = constantObj.text;
+        })
+        return map;
+      }
+    },
+    watch: {
+    },
+    async created() {
+      if (!this.isMobile) {
+        this.headers[this.headers.length - 1].class = 'fixed'
+        this.headers[this.headers.length - 1].cellClass = 'fixed'
+      }
+
+      await this.doUiAction('refreshTableData');
+    },
+    async mounted() {
+    },
+    methods: {
+      /**
+       * 获取表格数据
+       */
+      async refreshTableData() {
+        this.isTableLoading = true;
+        const serverSearchInput = _.pickBy(this.serverSearchInput, value => !!value);
+        const { data: { appData: { rows, count } } } = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'articleManagement',
+              actionId: 'selectItemList',
+              whereLike: {
+                articleTitle: this.serverSearchInput.articleTitle,
+              },
+              limit: (this.serverSearchInput.isFirstSearch && this.serverSearchInput.categoryId === 'all') ? 200 : 99999999,
+              orderBy: [{ column: 'id', order: 'desc' }]
+            }
+          }
+        });
+
+        this.tableDataFromBackend = rows;
+        this.isTableLoading = false;
+      },
+
+      // startCreateItem
+      async clearItemData() {
+        this.editItem = {};
+      },
+
+      async openCreateItemDialog() {
+        this.currentClickButton = {action: 'add', title: '新增'};
+        this.isEditDrawerShow = true;
+        this.dialogSaveInfoAction = 'createItem';
+      },
+
+      // createItem
+      async prepareValidate() {
+        if (!this.$refs.form.validate()) return false;
+      },
+
+      // createItem
+      async confirmCreateItemDialog() {
+        return window.confirmDialog({title: '新增', content: '确定新增吗？'})
+      },
+      /**
+       * 新增数据
+       */
+      async doCreateItem() {
+        delete this.computedEditItem.id;
+
+        const { id, ...data } = this.editItem;
+        await window.vtoast.loading("新增数据");
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'articleManagement',
+              actionId: 'jhInsertItem',
+              actionData: data
+            }
+          }
+        })
+        await window.vtoast.success("新增数据成功");
+      },
+
+      async closeDrawerShow() {
+        this.isEditDrawerShow = false;
+      },
+
+      // startUpdateItem
+      async prepareItemData({item}) {
+        this.editItem = {...item};
+      },
+
+      async openUpdateItemDialog() {
+        this.currentClickButton = {action: 'edit', title: '修改'};
+        this.isEditDrawerShow = true;
+        this.dialogSaveInfoAction = 'updateItem';
+      },
+
+      // updateItem
+      async confirmUpdateItemDialog() {
+        return window.confirmDialog({title: '修改', content: '确定修改吗？'});
+      },
+
+      /**
+       * 保存数据
+       */
+      async doUpdateItem() {
+        const id = this.computedEditItem.id;
+        delete this.computedEditItem.id;
+        await window.vtoast.loading("修改数据");
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'articleManagement',
+              actionId: 'jhUpdateItem',
+              actionData: this.computedEditItem,
+              where: { id: id }
+            }
+          }
+        })
+        await window.vtoast.success("修改数据成功");
+      },
+
+      // deleteItem
+      async confirmDeleteItemDialog() {
+        return window.confirmDialog({title: '删除', content: '确定删除吗？'});
+      },
+      /**
+       * 删除数据
+       */
+      async doDeleteItem({item}) {
+        await window.vtoast.loading("删除数据");
+        const result = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'articleManagement',
+              actionId: 'jhDeletedItem',
+              actionData: {},
+              where: { id: item.id }
+            }
+          }
+        });
+        await window.vtoast.success("删除数据成功");
+      },
+      getConstantCollectionItemText(key, _value) {
+        const constantCollectionItemFind = this.constantCollection[key].find(({ value }) => value === _value);
+        if (constantCollectionItemFind) {
+          return constantCollectionItemFind.text;
+        }
+        return value;
+      },
+      goToAssignmentDesignPage({item}) {
+        const { articleId } = item;
+        window.open(`/${window.appInfo.appId}/page/designAssignment?articleId=${articleId}`, '_self');
+      },
+      goHomeworkPage({item}) {
+        const { articleId } = item;
+        window.open(`/${window.appInfo.appId}/page/assignmentHomework?articleId=${articleId}`, '_self');
+      },
+      goAssignmentReview({item}) {
+        const { articleId } = item;
+        window.open(`/${window.appInfo.appId}/page/assignmentReview?articleId=${articleId}&action=correcting`, '_self');
+      },
+    }
+  })
+</script>
+
+<style scoped>
+</style>
+{% endblock %}
