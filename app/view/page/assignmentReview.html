@@ -160,7 +160,7 @@
        * main:   [{"vueComponent":"homework","function":"submitArticleAssignment"}]
       */
       async submitArticleAssignment ({ publish }) {
-        const { assignmentId, assignmentFormItemListWithUser, assignmentReviewStatus, assignmentSubmitStatus, reviewId } = this.userAssignment;
+        const { assignmentId, assignmentFormItemListWithUser, assignmentReviewStatus, assignmentSubmitStatus } = this.userAssignment;
         if (!this.assignmentId) {
           window.vtoast.fail("数据异常");
         }
@@ -187,7 +187,7 @@
           data: {
             appData: {
               pageId: "assignmentReview",
-              actionId: reviewId ? "updateItem" : "insertItem",
+              actionId: "updateItem",
               where: { assignmentId },
               actionData
             }
