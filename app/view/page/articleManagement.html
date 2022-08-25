@@ -16,7 +16,7 @@
         :class="{'pa-4': !isMobile, 'pb-0': !isMobile, 'pa-2': isMobile}">
 
         <v-btn color="success" dark class="elevation-0 mr-2"
-        @click="doUiAction('startCreateItem')">新增</v-btn>
+        @click="doAction('startCreateItem')">新增</v-btn>
         <span style="margin-right: 10px;">{{serverSearchInput.searchSummary}}</span>
         <!-- <span class="body-2">共{{ tableData.length }}条记录</span> -->
 
@@ -33,15 +33,16 @@
           {{ articlePublishStatusMap[item.articlePublishStatus] || item.articlePublishStatus }}
         </template>
         <template v-slot:item.action="{ item }">
-          <v-btn small class="mr-2 success" @click="doUiAction('startUpdateItem', {item})">编辑</v-btn>
-          <v-btn small class="mr-2 success" @click="doUiAction('assignmentDesignPage', {item})">编辑作业</v-btn>
-          <v-btn small class="mr-2 success" @click="doUiAction('homeworkPage', {item})">模拟做作业</v-btn>
-          <v-btn small class="mr-2 error" @click="doUiAction('deleteItem', {item})">删除</v-btn>
+          <v-btn small class="mr-2 success" @click="doAction('startUpdateItem', {item})">编辑</v-btn>
+          <v-btn small class="mr-2 success" @click="doAction('assignmentDesignPage', {item})">编辑作业</v-btn>
+          <v-btn small class="mr-2 success" @click="doAction('homeworkPage', {item})">模拟做作业</v-btn>
+          <v-btn small class="mr-2 error" @click="doAction('deleteItem', {item})">删除</v-btn>
         </template>
       </v-data-table>
     </v-card>
   </v-container>
 
+  <v-overlay app :value="isEditDrawerShow"></v-overlay>
   <!-- 编辑抽屉 -->
   <v-navigation-drawer v-model="isEditDrawerShow" fixed temporary right width="80%"
                         class="elevation-24">
@@ -60,8 +61,8 @@
         </v-col>
       </v-row>
       <v-row class="justify-end pr-6">
-        <v-btn color="success" @click="doUiAction(dialogSaveInfoAction)" small :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}" :class="{'mb-2': isMobile, 'mr-4': isMobile}">保存</v-btn>
-        <v-btn class="ml-2" @click="isEditDrawerShow = false" small :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}" :class="{'mr-4': isMobile}">取消</v-btn>
+        <v-btn color="success" @click="doAction(dialogSaveInfoAction)" :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}" :class="{'mb-2': isMobile, 'mr-4': isMobile}">保存</v-btn>
+        <v-btn class="ml-2 mr-2" @click="isEditDrawerShow = false" :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}" :class="{'mr-4': isMobile}">取消</v-btn>
       </v-row>
     </v-form>
   </v-navigation-drawer>
@@ -119,8 +120,8 @@
       isTableLoading: true,
       tableDataFromBackend: [],
       headers: [
-        { text: "ID", value: "articleId", width: 50, class: 'fixed', cellClass: 'fixed' },
-        { text: "作业标题", value: "articleTitle", width: 120 },
+        { text: "ID", value: "articleId", width: 100, class: 'fixed', cellClass: 'fixed' },
+        { text: "作业标题", value: "articleTitle", width: 300 },
         { text: "创建时间", value: "articleCreateTime", width: 220, edit: false },
         { text: '操作', value: 'action', align: 'center', sortable: false, width: 350 },
       ],
@@ -155,11 +156,55 @@
         this.headers[this.headers.length - 1].cellClass = 'fixed'
       }
 
-      await this.doUiAction('refreshTableData');
+      await this.doAction('refreshTableData');
     },
     async mounted() {
     },
     methods: {
+      async doAction(actionId, actionData) {
+          switch (actionId) {
+            case 'refreshTableData':
+              await this.refreshTableData(actionData);
+              break;
+            case 'startCreateItem':
+              await this.clearItemData(actionData);
+              await this.openCreateItemDialog(actionData);
+              break;
+            case 'createItem':
+              await this.prepareValidate(actionData);
+              await this.confirmCreateItemDialog(actionData);
+              await this.doCreateItem(actionData);
+              await this.refreshTableData(actionData);
+              await this.closeDrawerShow(actionData);
+              break;
+            case 'startUpdateItem':
+              await this.prepareItemData(actionData);
+              await this.openUpdateItemDialog(actionData);
+              break;
+            case 'updateItem':
+              await this.prepareValidate(actionData);
+              await this.confirmUpdateItemDialog(actionData);
+              await this.doUpdateItem(actionData);
+              await this.refreshTableData(actionData);
+              await this.closeDrawerShow(actionData);
+              break;
+            case 'deleteItem':
+              await this.confirmDeleteItemDialog(actionData);
+              await this.prepareItemData(actionData);
+              await this.doDeleteItem(actionData);
+              await this.refreshTableData(actionData);
+              break;
+            case 'assignmentDesignPage':
+              await this.goToAssignmentDesignPage(actionData);
+              break;
+            case 'homeworkPage':
+              await this.goHomeworkPage(actionData);
+              break;
+            default:
+              console.error("[doAction] actionId not find", { actionId });
+              break;
+          }
+      },
       /**
        * 获取表格数据
        */
@@ -197,12 +242,16 @@
 
       // createItem
       async prepareValidate() {
-        if (!this.$refs.form.validate()) return false;
+        if (await this.$refs.form.validate() === false) {
+          throw new Error("[prepareValidate] false");
+        }
       },
 
       // createItem
       async confirmCreateItemDialog() {
-        return window.confirmDialog({title: '新增', content: '确定新增吗？'})
+        if (await window.confirmDialog({title: "新增", content: "确定新增吗？"}) === false) {
+          throw new Error("[confirmCreateFormDialog] 否");
+        }
       },
       /**
        * 新增数据
@@ -241,7 +290,9 @@
 
       // updateItem
       async confirmUpdateItemDialog() {
-        return window.confirmDialog({title: '修改', content: '确定修改吗？'});
+        if (await window.confirmDialog({title: "修改", content: "确定修改吗？"}) === false) {
+          throw new Error("[confirmUpdateItemDialog] 否");
+        }
       },
 
       /**
@@ -266,7 +317,9 @@
 
       // deleteItem
       async confirmDeleteItemDialog() {
-        return window.confirmDialog({title: '删除', content: '确定删除吗？'});
+        if (await window.confirmDialog({title: "删除", content: "确定删除吗？"}) === false) {
+          throw new Error("[confirmDeleteItemDialog] 否");
+        }
       },
       /**
        * 删除数据
@@ -285,6 +338,7 @@
         });
         await window.vtoast.success("删除数据成功");
       },
+
       getConstantCollectionItemText(key, _value) {
         const constantCollectionItemFind = this.constantCollection[key].find(({ value }) => value === _value);
         if (constantCollectionItemFind) {
@@ -292,18 +346,18 @@
         }
         return value;
       },
+
+      // 跳转作业详情
       goToAssignmentDesignPage({item}) {
         const { articleId } = item;
         window.open(`/${window.appInfo.appId}/page/designAssignment?articleId=${articleId}`, '_self');
       },
+
+      // 跳转做作业
       goHomeworkPage({item}) {
         const { articleId } = item;
         window.open(`/${window.appInfo.appId}/page/assignmentHomework?articleId=${articleId}`, '_self');
-      },
-      goAssignmentReview({item}) {
-        const { articleId } = item;
-        window.open(`/${window.appInfo.appId}/page/assignmentReview?articleId=${articleId}&action=correcting`, '_self');
-      },
+      }
     }
   })
 </script>

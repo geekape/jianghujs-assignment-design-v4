@@ -11,12 +11,12 @@
   </template>
   <template slot="serverSearch" class="d-flex flex-column align-center">
     <v-row class="ma-0 align-center flex-none pa-0" :class="{'pa-2': !isMobile, 'pa-2': isMobile}" align="center" style="height: 100%;">
-      <v-col class="d-flex" :class="{'pt-2': isMobile, 'pl-0': isMobile, 'pr-0': !isMobile}" style="justify-content: end">
-        <span class="body-1 " style="font-weight: bold;">作业批改-总分【{{assignmentScore}}】</span>
-        <v-btn elevation="0" color="primary" dark @click.stop="doUiAction('submitArticleAssignment')" >
+      <v-col class="d-flex align-center" :class="{'pt-2': isMobile, 'pl-0': isMobile, 'pr-0': !isMobile}" style="justify-content: end">
+        <span class="mr-2">作业批改-总分【{{assignmentScore}}】</span>
+        <v-btn elevation="0" color="primary" dark @click.stop="doAction('submitArticleAssignment', {})" >
           保存批改
         </v-btn>
-        <v-btn elevation="0" style="margin-left: 20px" color="error" dark @click.stop="doUiAction('submitArticleAssignment', {publish: 'publish'})" >
+        <v-btn elevation="0" style="margin-left: 20px" color="error" dark @click.stop="doAction('submitArticleAssignment', {publish: 'publish'})" >
           提交批改
         </v-btn>
       </v-col>
@@ -42,7 +42,8 @@
     userInfo: {},
     action: '',
     assignmentId: '',
-    reviewData: {}
+    reviewData: {},
+    assignmentList: []
   })
 </script>
 
@@ -68,11 +69,6 @@
       },
       assignmentScore() {
         let score = 0;
-        // if (this.userAssignment.assignmentReviewStatus === 'publish') return this.userAssignment.assignmentScore;
-        // JSON.stringify(this.userAssignment) !== '{}' &&
-        // this.userAssignment.assignmentFormItemListWithUser.forEach((item) => {
-        //   score += parseInt(item.reviewData.score || 0)
-        // })
         for(const key in this.reviewData) {
           score += parseInt(this.reviewData[key].score || 0)
         }
@@ -83,7 +79,7 @@
       const urlParams = new URLSearchParams(location.search);
       this.assignmentId = urlParams.get('assignmentId');
       this.action = urlParams.get('action');
-      this.doUiAction('mineAssignment', {assignmentId: this.assignmentId});
+      this.doAction('mineAssignment');
     },
     watch: {
       articleNote: {
@@ -94,23 +90,45 @@
     mounted() {
     },
     methods: {
+      async doAction(actionId, actionData) {
+        switch (actionId) {
+          case 'mineAssignment':
+            await this.mineAssignment(actionData);
+            await this.assignmentData(actionData);
+            break;
+          case 'submitArticleAssignment':
+            await this.prepareValidate(actionData);
+            await this.submitArticleAssignment(actionData);
+            await this.refreshData(actionData);
+            break;
+          default:
+            console.error("[doAction] actionId not find", { actionId });
+            break;
+        }
+      },
       /** 
        * uiActionId:  mineAssignment
        * description: ✅获取用户作业
        * main:   [{"function":"mineAssignment"}]
       */
-      async mineAssignment({assignmentId}) {
+      async mineAssignment() {
         const result = await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'assignmentReview',
               actionId: 'selectItemList',
-              where: { assignmentId: assignmentId }
+              where: { assignmentId:  this.assignmentId }
             }
           }
         });
-        if (result.data.appData.rows.length) {
-          const userAssignment = result.data.appData.rows[0];
+        this.assignmentList = result.data.appData.rows || [];
+      },
+
+      // 处理作业数据
+      async assignmentData(){
+        const { assignmentList } = this;
+        if (assignmentList.length) {
+          const userAssignment = assignmentList[0];
           let { assignmentFormItemListWithUser, assignmentFormItemListWithAnswer, assignmentReview } = userAssignment;
           assignmentFormItemListWithUser = JSON.parse(assignmentFormItemListWithUser || '[]');
           assignmentFormItemListWithAnswer = JSON.parse(assignmentFormItemListWithAnswer || '[]');
@@ -150,6 +168,20 @@
         }
       },
 
+
+      // 验证
+      async prepareValidate({ publish }) {
+        const { assignmentSubmitStatus } = this.userAssignment;
+        if (!this.assignmentId) {
+          window.vtoast.fail("数据异常");
+          return false;
+        }
+        if (publish && !assignmentSubmitStatus) {
+          window.vtoast.fail("用户尚未提交作业，禁止提交批改");
+          return false;
+        }
+      },
+
       /** 
        * uiActionId:  submitArticleAssignment
        * description: ✅提交作业
@@ -157,18 +189,6 @@
       */
       async submitArticleAssignment ({ publish }) {
         const { assignmentId, assignmentFormItemListWithUser, assignmentReviewStatus, assignmentSubmitStatus } = this.userAssignment;
-        if (!this.assignmentId) {
-          window.vtoast.fail("数据异常");
-        }
-        // if (assignmentReviewStatus === 'publish') {
-        //   // TODO:: 后端禁止提交拦截
-        //   window.vtoast.fail("已提交，禁止操作");
-        //   return false;
-        // }
-        if (publish && !assignmentSubmitStatus) {
-          window.vtoast.fail("用户尚未提交作业，禁止提交批改");
-          return false;
-        }
 
         window.vtoast.loading("保存中...");
         const actionData = {
@@ -190,7 +210,10 @@
           }
         })
         window.vtoast.success(publish ? "提交成功":"保存成功");
-        this.doUiAction('mineAssignment', {assignmentId: this.assignmentId});
+      },
+
+      async refreshData() {
+        this.doAction('mineAssignment');
       },
       dayjs: dayjs
     }

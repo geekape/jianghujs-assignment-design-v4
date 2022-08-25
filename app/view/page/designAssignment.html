@@ -18,44 +18,19 @@
   <template slot="serverSearch">
     <v-row class="ma-0 align-center flex-none pa-0" :class="{'pa-2': !isMobile, 'pa-2': isMobile}" align="center" style="height: 100%;">
       <v-col class="d-flex" :class="{'pt-2': isMobile, 'pl-0': isMobile, 'pr-0': !isMobile}" style="justify-content: end">
-        <!-- <v-btn class="mr-2" @click="formItemListPreview">预览</v-btn> -->
-        <v-btn color="success" dark class="elevation-0 mr-2" v-if="article && article.articleAssignmentPublishStatus !== 'publish'" @click="saveArticleAssignment(false)">保存</v-btn>
-        <v-btn color="error" dark class="elevation-0 mr-2" v-if="article && article.articleAssignmentPublishStatus !== 'publish'" @click="saveArticleAssignment('publish')">提交</v-btn>
+        <v-btn color="success" dark class="elevation-0 mr-2" v-if="article && article.articleAssignmentPublishStatus !== 'publish'" @click="doAction('saveArticleAssignment', false)">保存</v-btn>
+        <v-btn color="error" dark class="elevation-0 mr-2" v-if="article && article.articleAssignmentPublishStatus !== 'publish'" @click="doAction('saveArticleAssignment', 'publish')">提交</v-btn>
         <div v-else>
           <v-btn color="error" dark class="elevation-0 mr-2" disabled >已提交，不能修改</v-btn>
-          <v-btn color="success" dark class="elevation-0 mr-2" @click="saveArticleAssignment('cancel')">撤销提交</v-btn>
+          <v-btn color="success" dark class="elevation-0 mr-2" @click="doAction('saveArticleAssignment', 'cancel')">撤销提交</v-btn>
         </div>
       </v-col>
     </v-row>
   </template>
-  <!-- <v-container class="fullScreen d-flex flex-column pa-xs-0 pa-0">
-    <v-card style="height: calc(100vh - 300px);" class="pa-2">
-      <form-item-list-generator style="height: 100%;"
-      :form-item-list="articleAssignmentWithAnswer.formItemList"
-      ref="formItemListGenerator"/>
-    </v-card>
-  </v-container> -->
   <template slot-scope="props" style="height: calc(100vh - 300px)">
     <tpl-form-design :form="articleAssignmentWithAnswer">
     </tpl-form-design>
   </template>
-  <!-- <v-navigation-drawer v-model="formItemListPreviewDrawer" :permanent="formItemListPreviewDrawer" fixed right temporary bottom width="90%">
-    <v-row class="pt-8">
-      <span class="title pa-6" :class="{'pl-12': !isMobile, 'pl-6': isMobile}">表单预览</span>
-      <v-spacer></v-spacer>
-      <v-btn class="mt-6 elevation-0" :class="{'mr-16': !isMobile, 'mr-8': isMobile}" fab x-small @click="formItemListPreviewDrawer = false">
-        <v-icon dark>mdi-close</v-icon>
-      </v-btn>
-    </v-row>
-    <v-row :class="{'px-10': !isMobile, 'px-3': isMobile, 'pb-7': isMobile}">
-        <v-col cols="12" md="6" class="pa-0">
-          <vue-json-editor v-model="formItemList" :show-btns="true" :mode="'code'" lang="zh" @json-change="onJsonChange" @json-save="onJsonSave" @has-error="onError"></vue-json-editor>
-        </v-col>
-        <v-col cols="12" md="6">
-          <form-item-list-render :form-item-list="formItemList"></form-item-list-render>
-        </v-col>
-    </v-row>
-  </v-navigation-drawer> -->
 </jh-layout-v3>
 
 {% endblock %}
@@ -114,10 +89,24 @@
       if (title) {
         this.title = title;
       }
-      this.selectArticleAssignment(articleId);
+      this.doAction('selectArticleAssignment', articleId);
     },
     mounted() {},
     methods: {
+      async doAction(actionId, actionData) {
+        switch (actionId) {
+          case 'selectArticleAssignment':
+            await this.selectArticleAssignment(actionData);
+            break;
+          case 'saveArticleAssignment':
+            await this.saveArticleAssignment(actionData);
+            break;
+          default:
+            console.error("[doAction] actionId not find", { actionId });
+            break;
+        }
+      },
+      // 获取作业详情
       async selectArticleAssignment(articleId) {
         const result = await window.jianghuAxios({
           data: {
@@ -146,9 +135,8 @@
         })
         this.articleAssignmentWithAnswer = articleAssignmentWithAnswer;
       },
-      formItemListPreview() {
-        this.formItemListPreviewDrawer = true;
-      },
+
+      // 保存作业
       async saveArticleAssignment (articleAssignmentPublishStatus = false) {
         if (!this.article) {
           window.vtoast.fail("文章不存在");
@@ -195,23 +183,6 @@
         if (articleAssignmentPublishStatus) {
           this.article.articleAssignmentPublishStatus = articleAssignmentPublishStatus === 'publish' ? articleAssignmentPublishStatus : null;
         }
-      },
-      async publishArticleAssignment () {
-
-      },
-      onJsonChange() {
-
-      },
-      onJsonSave(value) {
-        if (this.jsonObj.type === 'ui') {
-          this.ui.list[this.jsonObj.index][this.jsonObj.key] = JSON.stringify(value);
-        } else {
-          this.resource.list[this.jsonObj.index][this.jsonObj.key] = JSON.stringify(value);
-        }
-        this.editJsonDialog = false;
-      },
-      onError(res) {
-        this.jsonError = res;
       },
     },
   })

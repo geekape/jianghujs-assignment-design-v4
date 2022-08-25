@@ -22,13 +22,13 @@
       <v-col class="pl-0" style="max-width: 77px">
         
         <v-btn v-if="userAssignment && userAssignment.assignmentSubmitStatus !== 'publish'" elevation="0" style="max-width: 60px" color="green" dark
-        @click.stop="doUiAction('saveArticleAssignment')" :loading="saveing">
+        @click.stop="doAction('saveArticleAssignment')" :loading="saveing">
     保存
     </v-btn>
       </v-col>
       <v-col class="pl-0" style="max-width: 77px">
         <v-btn v-if="userAssignment && userAssignment.assignmentSubmitStatus !== 'publish'" elevation="0" style="max-width: 60px; margin-left: 10px" color="primary" dark
-          @click.stop="doUiAction('submitArticleAssignment', {publish: 'publish'})" :loading="submiting">
+          @click.stop="doAction('submitArticleAssignment', {publish: 'publish'})" :loading="submiting">
       提交
     </v-btn>
       </v-col>
@@ -86,9 +86,9 @@
       const urlParams = new URLSearchParams(location.search);
       this.articleId = urlParams.get('articleId');
       this.action = urlParams.get('action');
-      // this.doUiAction('mineAssignment', {articleId: this.articleId});
-      this.doUiAction('getUserAssignment', {articleId: this.articleId});
-      // this.doUiAction('getLoginUserInfo');
+      // this.doAction('mineAssignment', {articleId: this.articleId});
+      this.doAction('getUserAssignment', {articleId: this.articleId});
+      // this.doAction('getLoginUserInfo');
     },
     watch: {
       articleNote: {
@@ -99,7 +99,29 @@
     mounted() {
     },
     methods: {
-
+      async doAction(actionId, actionData) {
+        switch (actionId) {
+          case 'mineAssignment':
+            await this.mineAssignment(actionData);
+            break;
+          case 'getLoginUserInfo':
+            await this.getLoginUserInfo(actionData);
+            break;
+          case 'submitArticleAssignment':
+            await this.confirmSubmitDialog(actionData);
+            await this.submitArticleAssignment(actionData);
+            break;
+          case 'getUserAssignment':
+            await this.getUserAssignment(actionData);
+            break;
+          case 'saveArticleAssignment':
+            await this.saveArticleAssignment(actionData);
+            break;
+          default:
+            console.error("[doAction] actionId not find", { actionId });
+            break;
+        }
+      },
       // 获取用户信息
       async getLoginUserInfo() {
         this.userInfo = await window.jianghuAxios({
@@ -118,6 +140,11 @@
             return response.data.appData;
           }
         });
+      },
+      async confirmSubmitDialog() {
+        if (await window.confirmDialog({title: "作业提交之后不能继续修改", content: "确定提交吗？"}) === false) {
+          throw new Error("[confirmSubmitDialog] 否");
+        }
       },
       async submitArticleAssignment(item) {
         await this.saveArticleAssignment(item);
