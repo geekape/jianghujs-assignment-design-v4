@@ -14,15 +14,15 @@
     【{{ title }}】的作业设计
     <span style="font-size: 1rem;" :class="{'d-block': isMobile}">(ID: {{ articleId }})</span>
   </template>
-  
+
   <template slot="serverSearch">
     <v-row class="ma-0 align-center flex-none pa-0" :class="{'pa-2': !isMobile, 'pa-2': isMobile}" align="center" style="height: 100%;">
       <v-col class="d-flex" :class="{'pt-2': isMobile, 'pl-0': isMobile, 'pr-0': !isMobile}" style="justify-content: end">
-        <v-btn color="success" dark class="elevation-0 mr-2" v-if="article && article.articleAssignmentPublishStatus !== 'publish'" @click="doAction('saveArticleAssignment', false)">保存</v-btn>
-        <v-btn color="error" dark class="elevation-0 mr-2" v-if="article && article.articleAssignmentPublishStatus !== 'publish'" @click="doAction('saveArticleAssignment', 'publish')">提交</v-btn>
+        <v-btn color="success" dark class="elevation-0 mr-2" v-if="article && article.articleAssignmentPublishStatus !== 'publish'" @click="doUiAction('saveArticleAssignment', false)">保存</v-btn>
+        <v-btn color="error" dark class="elevation-0 mr-2" v-if="article && article.articleAssignmentPublishStatus !== 'publish'" @click="doUiAction('saveArticleAssignment', 'publish')">提交</v-btn>
         <div v-else>
           <v-btn color="error" dark class="elevation-0 mr-2" disabled >已提交，不能修改</v-btn>
-          <v-btn color="success" dark class="elevation-0 mr-2" @click="doAction('saveArticleAssignment', 'cancel')">撤销提交</v-btn>
+          <v-btn color="success" dark class="elevation-0 mr-2" @click="doUiAction('saveArticleAssignment', 'cancel')">撤销提交</v-btn>
         </div>
       </v-col>
     </v-row>
@@ -48,10 +48,12 @@
     template: '#app-template',
     vuetify: new Vuetify(),
     data: () => ({
+      isMobile: window.innerWidth < 600,
       formItemListPreviewDrawer: false,
       articleId: null,
       article: null,
       title: null,
+      saveActionData: {},
       articleAssignmentWithAnswer: [],
       codemirrorOptions: {
         mode: 'application/json' ,
@@ -60,25 +62,17 @@
         smartIndent: false,
         tabSize: 4,
         indentWithTabs: true,
-      }
-    }),
-    computed: {
-      isMobile() {
-        return window.innerWidth < 600;
       },
-      formItemList () {
-        let list = []
-        if (this.articleAssignmentWithAnswer) {
-          list = _.cloneDeep(this.articleAssignmentWithAnswer);
-          list.forEach(item => {
-            // delete item.answerData;
-            item.userData = {};
-          })
+      formItemList: []
+    }),
+    watch: {
+      articleAssignmentWithAnswer: {
+        deep: true,
+        handler() {
+          this.buildFormItemList();
         }
-        return list;
       }
     },
-    watch: {},
     async created() {
       const urlParams = new URLSearchParams(location.search);
       const articleId = urlParams.get('articleId');
@@ -89,22 +83,38 @@
       if (title) {
         this.title = title;
       }
-      this.doAction('selectArticleAssignment', articleId);
+      this.doUiAction('selectArticleAssignment', articleId);
     },
     mounted() {},
     methods: {
-      async doAction(actionId, actionData) {
+      async doUiAction(actionId, actionData) {
         switch (actionId) {
           case 'selectArticleAssignment':
             await this.selectArticleAssignment(actionData);
+            await this.buildArticleAssignmentWithAnswer(actionData);
             break;
           case 'saveArticleAssignment':
-            await this.saveArticleAssignment(actionData);
+            await this.vaildArticleAssignment(actionData);
+            await this.buildAssignmentItemFile(actionData);
+            await this.createSaveActionData(actionData);
+            await this.saveArticleAssignmentRequest(actionData);
+            await this.syncArticleAssignmentPublishStatus(actionData);
             break;
           default:
-            console.error("[doAction] actionId not find", { actionId });
+            console.error("[doUiAction] actionId not find", { actionId });
             break;
         }
+      },
+      buildFormItemList () {
+        let list = []
+        if (this.articleAssignmentWithAnswer) {
+          list = _.cloneDeep(this.articleAssignmentWithAnswer);
+          list.forEach(item => {
+            // delete item.answerData;
+            item.userData = {};
+          })
+        }
+        return list;
       },
       // 获取作业详情
       async selectArticleAssignment(articleId) {
@@ -124,6 +134,9 @@
         }
 
         this.article = result.data.appData.resultData.rows[0];
+      },
+
+      buildArticleAssignmentWithAnswer() {
         const articleAssignmentWithAnswer = JSON.parse(this.article.articleAssignmentWithAnswer || '[]');
         _.forEach(articleAssignmentWithAnswer, (item, index) => {
           if (!item.hasOwnProperty('upload')) {
@@ -137,53 +150,61 @@
       },
 
       // 保存作业
-      async saveArticleAssignment (articleAssignmentPublishStatus = false) {
+      async vaildArticleAssignment (articleAssignmentPublishStatus) {
         if (!this.article) {
           window.vtoast.fail("文章不存在");
-          return;
+          throw new Error("[saveArticleAssignment：文章不存在]")
         }
-        
+
         if (articleAssignmentPublishStatus === 'publish' && !await window.confirmDialog({ title: '提交后请勿再次修改保存', content: '确定提交吗？' })) {
-          return
+          throw new Error("[saveArticleAssignment:confirmDialog：提交后请勿再次修改保存,确定提交吗], 否")
         }
+      },
+      buildAssignmentItemFile() {
         _.forEach(this.articleAssignmentWithAnswer, (item, index) => {
           item.file = {}
           _.forEach(item.upload, (type, i) => {
-            console.log(type)
             item.file[type] = '';
           })
         })
+      },
+      createSaveActionData(articleAssignmentPublishStatus) {
+        this.saveActionData = {};
         const articleAssignment = _.cloneDeep(this.articleAssignmentWithAnswer);
         articleAssignment.forEach(formItem => {
           formItem.answerData = {};
         })
-        const actionData = {
-            articleAssignmentWithAnswer: JSON.stringify(this.articleAssignmentWithAnswer),
-            articleAssignment: JSON.stringify(articleAssignment),
-          };
+        this.saveActionData = {
+          articleAssignmentWithAnswer: JSON.stringify(this.articleAssignmentWithAnswer),
+          articleAssignment: JSON.stringify(articleAssignment),
+        };
         if (articleAssignmentPublishStatus === 'publish') {
-          actionData.articleAssignmentPublishStatus = articleAssignmentPublishStatus;
+          this.saveActionData.articleAssignmentPublishStatus = articleAssignmentPublishStatus;
         }
         if (articleAssignmentPublishStatus === 'cancel') {
-          actionData.articleAssignmentPublishStatus = null;
+          this.saveActionData.articleAssignmentPublishStatus = null;
         }
+      },
+      async saveArticleAssignmentRequest(articleAssignmentPublishStatus) {
         window.vtoast.loading("保存");
         await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'assignmentDesign',
               actionId: 'updateArticleAssignment',
-              actionData,
-              where: { articleId: this.articleId }
+              actionData: this.saveActionData,
+              where: {articleId: this.articleId}
             }
           }
         });
         const msg = articleAssignmentPublishStatus === 'publish' ? '提交成功' : articleAssignmentPublishStatus === 'cancel' ? "撤销成功" : "保存成功";
         window.vtoast.success(msg);
+      },
+      syncArticleAssignmentPublishStatus(articleAssignmentPublishStatus) {
         if (articleAssignmentPublishStatus) {
           this.article.articleAssignmentPublishStatus = articleAssignmentPublishStatus === 'publish' ? articleAssignmentPublishStatus : null;
         }
-      },
+      }
     },
   })
 </script>

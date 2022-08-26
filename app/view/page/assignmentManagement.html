@@ -10,7 +10,7 @@
     <v-col cols="12" xs="6" sm="3" md="3" xl="3" class="pa-xs-0 pa-xs-2 col-sm-8-flex">
       <v-select
         :items="constantCollection.assignmentSubmitStatus"
-        dense filled single-line 
+        dense filled single-line
         item-text="text"
         item-value="value"
         class="cus-v-input"
@@ -22,7 +22,7 @@
     <v-col cols="12" xs="6" sm="3" md="3" xl="3" class="pa-xs-0 pa-xs-2 col-sm-8-flex">
       <v-select
         :items="constantCollection.assignmentReviewStatus"
-        dense filled single-line 
+        dense filled single-line
         item-text="text"
         item-value="value"
         class="cus-v-input"
@@ -31,7 +31,7 @@
         v-model="serverSearchInput.assignmentReviewStatus"
       ></v-select>
     </v-col>
-    <v-btn color="success" dark class="elevation-0 mr-2" @click="doAction('refreshTableData')">查询</v-btn>
+    <v-btn color="success" dark class="elevation-0 mr-2" @click="doUiAction('refreshTableData')">查询</v-btn>
   </v-row>
 </template>
 <!-- 页面主要内容 -->
@@ -39,12 +39,12 @@
   <v-card>
     <v-row class="ma-0 pa-xs-4 align-center flex-none pt-0 " :class="{'pa-4': !isMobile, 'pb-0': !isMobile, 'pa-2': isMobile}">
       <v-col cols="12" xs="4" sm="4" md="4" xl="4" class="pl-0">
-        <span style="margin-right: 10px;">{{serverSearchInput.searchSummary}}</span>  
+        <span style="margin-right: 10px;">{{serverSearchInput.searchSummary}}</span>
         <span class="body-2">共{{ tableData.length || 0 }}条记录</span>
       </v-col>
 
       <v-spacer></v-spacer>
-      
+
       <v-col cols="12" xs="6" sm="3" md="3" xl="3" class="pa-xs-0 pa-xs-2 col-sm-8-flex">
         <v-text-field small v-model="searchInput"  color="success" prefix="表格过滤：" class="cus-v-input" dense filled single-line></v-text-field>
       </v-col>
@@ -64,9 +64,9 @@
       </template>
       <template v-slot:item.assignmentReviewStatus="{ item }">
         {{ assignmentReviewStatusMap[item.assignmentReviewStatus] || item.assignmentReviewStatus }}
-      </template>    
+      </template>
       <template v-slot:item.action="{ item }">
-        <v-btn small color="warning" class="mr-2" @click="doAction('assignmentReview', { item })">批改</v-btn>
+        <v-btn small color="warning" class="mr-2" @click="doUiAction('assignmentReview', { item })">批改</v-btn>
       </template>
     </v-data-table>
   </v-card>
@@ -103,7 +103,7 @@ new Vue({
         { text: "待批改", value: null },
         { text: "已批改", value: "publish" },
       ],
-      
+
     },
 
     serverSearchInput: {
@@ -120,13 +120,13 @@ new Vue({
     tableDataFromBackend: [],
     headers: [
       {text: "ID", value: "id", width: 120, class: 'fixed', cellClass: 'fixed'},
-      {text: "文章标题", value: "articleTitle", width: 120}, 
-      {text: "学生ID", value: "userId", width: 120}, 
-      {text: "分数", value: "assignmentScore", width: 120}, 
-      {text: "提交状态", value: "assignmentSubmitStatus", width: 120}, 
-      {text: "批改状态", value: "assignmentReviewStatus", width: 120}, 
-      {text: "提交时间", value: "assignmentSubmitAt", width: 120}, 
-      {text: "批改人", value: "operationByUser", width: 120}, 
+      {text: "文章标题", value: "articleTitle", width: 120},
+      {text: "学生ID", value: "userId", width: 120},
+      {text: "分数", value: "assignmentScore", width: 120},
+      {text: "提交状态", value: "assignmentSubmitStatus", width: 120},
+      {text: "批改状态", value: "assignmentReviewStatus", width: 120},
+      {text: "提交时间", value: "assignmentSubmitAt", width: 120},
+      {text: "批改人", value: "operationByUser", width: 120},
       {text: "操作时间", value: "operationAt", width: 250},
       {text: '操作', value: 'action', align: 'center', sortable: false, width: 150, class: 'fixed', cellClass: 'fixed'},
     ],
@@ -166,15 +166,15 @@ new Vue({
       })
       return map;
     },
-    
+
   },
   watch: {},
   async created() {
-    await this.doAction('refreshTableData');
+    await this.doUiAction('refreshTableData');
   },
   mounted() {},
   methods: {
-    async doAction(actionId, actionData) {
+    async doUiAction(actionId, actionData) {
         switch (actionId) {
           case 'refreshTableData':
             await this.refreshTableData(actionData);
@@ -183,11 +183,11 @@ new Vue({
             await this.goToAssignmentReviewPage(actionData);
             break;
           default:
-            console.error("[doAction] actionId not find", { actionId });
+            console.error("[doUiAction] actionId not find", { actionId });
             break;
         }
     },
-    /** 
+    /**
      * uiActionId:  refreshTableData
      * description: ✅获取表格数据
      * main:   [{"function":"refreshTableData"}]
@@ -211,7 +211,7 @@ new Vue({
       // Tip 这个放最后
       this.serverSearchInput.isFirstSearch  = false;
     },
-    
+
     // 批改
     goToAssignmentReviewPage({ item }) {
       const { assignmentId, articleTitle, userId } = item;

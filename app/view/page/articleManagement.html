@@ -16,9 +16,9 @@
         :class="{'pa-4': !isMobile, 'pb-0': !isMobile, 'pa-2': isMobile}">
 
         <v-btn color="success" dark class="elevation-0 mr-2"
-        @click="doAction('startCreateItem')">新增</v-btn>
+        @click="doUiAction('startCreateItem')">新增</v-btn>
         <span style="margin-right: 10px;">{{serverSearchInput.searchSummary}}</span>
-        <!-- <span class="body-2">共{{ tableData.length }}条记录</span> -->
+        <!-- <span class="body-2">共{{ tableDataFromBackend.length }}条记录</span> -->
 
         <v-spacer></v-spacer>
 
@@ -26,17 +26,17 @@
           <v-text-field v-model="searchInput" prefix="结果过滤" class="cus-v-input" dense filled single-line></v-text-field>
         </v-col>
       </v-row>
-      <v-data-table fixed-header :headers="headers" :items="tableData" :search="searchInput"
+      <v-data-table fixed-header :headers="headers" :items="tableDataFromBackend" :search="searchInput"
         :footer-props="{ itemsPerPageOptions: [-1, 20, 40, 60, 100, 200] }" :items-per-page="-1" mobile-breakpoint="0"
         :loading="isTableLoading" checkbox-color="success" class="elevation-0">
         <template v-slot:item.articlePublishStatus="{ item }">
-          {{ articlePublishStatusMap[item.articlePublishStatus] || item.articlePublishStatus }}
+          {{ parseConstantValue('articlePublishStatus', item.articlePublishStatus) }}
         </template>
         <template v-slot:item.action="{ item }">
-          <v-btn small class="mr-2 success" @click="doAction('startUpdateItem', {item})">编辑</v-btn>
-          <v-btn small class="mr-2 success" @click="doAction('assignmentDesignPage', {item})">编辑作业</v-btn>
-          <v-btn small class="mr-2 success" @click="doAction('homeworkPage', {item})">模拟做作业</v-btn>
-          <v-btn small class="mr-2 error" @click="doAction('deleteItem', {item})">删除</v-btn>
+          <v-btn small class="mr-2 success" @click="doUiAction('startUpdateItem', {item})">编辑</v-btn>
+          <v-btn small class="mr-2 success" @click="doUiAction('assignmentDesignPage', {item})">编辑作业</v-btn>
+          <v-btn small class="mr-2 success" @click="doUiAction('homeworkPage', {item})">模拟做作业</v-btn>
+          <v-btn small class="mr-2 error" @click="doUiAction('deleteItem', {item})">删除</v-btn>
         </template>
       </v-data-table>
     </v-card>
@@ -61,7 +61,7 @@
         </v-col>
       </v-row>
       <v-row class="justify-end pr-6">
-        <v-btn color="success" @click="doAction(dialogSaveInfoAction)" :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}" :class="{'mb-2': isMobile, 'mr-4': isMobile}">保存</v-btn>
+        <v-btn color="success" @click="doUiAction(dialogSaveInfoAction)" :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}" :class="{'mb-2': isMobile, 'mr-4': isMobile}">保存</v-btn>
         <v-btn class="ml-2 mr-2" @click="isEditDrawerShow = false" :style="{width: isMobile ? 'calc(100% - 45px)' : '200px'}" :class="{'mr-4': isMobile}">取消</v-btn>
       </v-row>
     </v-form>
@@ -72,8 +72,6 @@
 
 {% block vue_body %}
 
-{% include 'layout/jhLayout.html' %}
-{% include 'common/resetTableMaxHeight.html' %}
 {% include 'component/singleSelectDialog.html' %}
 
 <script type="module">
@@ -81,8 +79,8 @@
     el: '#app',
     template: '#app-template',
     vuetify: new Vuetify(),
-    mixins: [window.jianghuUiActionMixins],
     data: () => ({
+      isMobile: window.innerWidth < 600,
       selectCategoryDialog: false,
       // 表格相关数据
       isFormValid: true,
@@ -130,24 +128,6 @@
       editItem: {},
       dialogSaveInfoAction: ''
     }),
-    computed: {
-      isMobile() {
-        return window.innerWidth < 600;
-      },
-      tableData() {
-        return this.tableDataFromBackend;
-      },
-      computedEditItem() {
-        return this.editItem;
-      },
-      articlePublishStatusMap() {
-        const map = {};
-        this.constantCollection.allArticlePublishStatus.forEach(constantObj => {
-          map[constantObj.value] = constantObj.text;
-        })
-        return map;
-      }
-    },
     watch: {
     },
     async created() {
@@ -156,12 +136,12 @@
         this.headers[this.headers.length - 1].cellClass = 'fixed'
       }
 
-      await this.doAction('refreshTableData');
+      await this.doUiAction('refreshTableData');
     },
     async mounted() {
     },
     methods: {
-      async doAction(actionId, actionData) {
+      async doUiAction(actionId, actionData) {
           switch (actionId) {
             case 'refreshTableData':
               await this.refreshTableData(actionData);
@@ -201,7 +181,7 @@
               await this.goHomeworkPage(actionData);
               break;
             default:
-              console.error("[doAction] actionId not find", { actionId });
+              console.error("[doUiAction] actionId not find", { actionId });
               break;
           }
       },
@@ -257,7 +237,7 @@
        * 新增数据
        */
       async doCreateItem() {
-        delete this.computedEditItem.id;
+        delete this.editItem.id;
 
         const { id, ...data } = this.editItem;
         await window.vtoast.loading("新增数据");
@@ -299,15 +279,15 @@
        * 保存数据
        */
       async doUpdateItem() {
-        const id = this.computedEditItem.id;
-        delete this.computedEditItem.id;
+        const id = this.editItem.id;
+        delete this.editItem.id;
         await window.vtoast.loading("修改数据");
         await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'articleManagement',
               actionId: 'jhUpdateItem',
-              actionData: this.computedEditItem,
+              actionData: this.editItem,
               where: { id: id }
             }
           }
@@ -339,12 +319,15 @@
         await window.vtoast.success("删除数据成功");
       },
 
-      getConstantCollectionItemText(key, _value) {
-        const constantCollectionItemFind = this.constantCollection[key].find(({ value }) => value === _value);
+      /**
+       * 常量解析
+       */
+      parseConstantValue(key, _value) {
+        const constantCollectionItemFind = this.constantCollection[key].find(({value}) => value === _value);
         if (constantCollectionItemFind) {
           return constantCollectionItemFind.text;
         }
-        return value;
+        return _value;
       },
 
       // 跳转作业详情

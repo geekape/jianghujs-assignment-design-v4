@@ -4,40 +4,42 @@
 
 <!--xfComments.html start-->
 <jh-layout-v3>
-  
-  <template slot="breadcrumbsTitle">
-    <span style="color: #999">作业-</span>
-    <span v-if="userAssignment && userAssignment.assignmentReviewStatus === 'publish'">
+
+<template slot="breadcrumbsTitle">
+  <span style="color: #999">作业-</span>
+  <span v-if="userAssignment && userAssignment.assignmentReviewStatus === 'publish'">
     总得分【{{ userAssignment.assignmentScore }}】
     </span>
-    <span v-else-if="userAssignment && userAssignment.assignmentSubmitStatus === 'publish'">
+  <span v-else-if="userAssignment && userAssignment.assignmentSubmitStatus === 'publish'">
     待批改
     </span>
-    <span v-else>
+  <span v-else>
     待提交
     </span>
-  </template>
-  <template slot="serverSearch">
-    <v-row class="ma-0 align-center pa-2" style="justify-content: end">
-      <v-col class="pl-0" style="max-width: 77px">
-        
-        <v-btn v-if="userAssignment && userAssignment.assignmentSubmitStatus !== 'publish'" elevation="0" style="max-width: 60px" color="green" dark
-        @click.stop="doAction('saveArticleAssignment')" :loading="saveing">
-    保存
-    </v-btn>
-      </v-col>
-      <v-col class="pl-0" style="max-width: 77px">
-        <v-btn v-if="userAssignment && userAssignment.assignmentSubmitStatus !== 'publish'" elevation="0" style="max-width: 60px; margin-left: 10px" color="primary" dark
-          @click.stop="doAction('submitArticleAssignment', {publish: 'publish'})" :loading="submiting">
-      提交
-    </v-btn>
-      </v-col>
-    </v-row>
-    
-  </template>
-  <div class="" v-if="userAssignment">
-    <form-item-list-render></form-item-list-render>
-  </div>
+</template>
+<template slot="serverSearch">
+  <v-row class="ma-0 align-center pa-2" style="justify-content: end">
+    <v-col class="pl-0" style="max-width: 77px">
+
+      <v-btn v-if="userAssignment && userAssignment.assignmentSubmitStatus !== 'publish'" elevation="0"
+             style="max-width: 60px" color="green" dark
+             @click.stop="doUiAction('saveArticleAssignment')" :loading="saveing">
+        保存
+      </v-btn>
+    </v-col>
+    <v-col class="pl-0" style="max-width: 77px">
+      <v-btn v-if="userAssignment && userAssignment.assignmentSubmitStatus !== 'publish'" elevation="0"
+             style="max-width: 60px; margin-left: 10px" color="primary" dark
+             @click.stop="doUiAction('submitArticleAssignment', {publish: 'publish'})" :loading="submiting">
+        提交
+      </v-btn>
+    </v-col>
+  </v-row>
+
+</template>
+<div class="" v-if="userAssignment">
+  <form-item-list-render></form-item-list-render>
+</div>
 </jh-layout-v3>
 
 
@@ -45,310 +47,289 @@
 
 {% block vue_body %}
 <script type="module">
-  window.registerData({
-    rightPanels: [0],
-    saveing: false,
-    article: {},
-    userInfo: {},
-    action: '',
-    submiting: null, //assignment
-    articleAssignment: {},
-    userAssignment: null,
-    assignmentReview: {},
-    userFileList: [],
-  }, {
-      isMobile() {
-        return window.innerWidth < 600;
-      },
-      isCorrecting() {
-        return this.action === 'correcting'
-      },
-      assignmentDisabled() {
-        return this.userAssignment && this.userAssignment.assignmentSubmitStatus === 'publish';
-      },
-      score() {
-        return this.userAssignment && this.userAssignment.assignmentReviewStatus === 'publish';
-      }
-    })
+window.registerData({
+  isMobile: window.innerWidth < 600,
+  rightPanels: [0],
+  saveing: false,
+  article: {},
+  userInfo: {},
+  action: '',
+  submiting: null, //assignment
+  articleAssignment: {},
+  userAssignment: null,
+  assignmentReview: {},
+  userFileList: [],
+}, {
+  isCorrecting() {
+    return this.action === 'correcting'
+  },
+  assignmentDisabled() {
+    return this.userAssignment && this.userAssignment.assignmentSubmitStatus === 'publish';
+  },
+  score() {
+    return this.userAssignment && this.userAssignment.assignmentReviewStatus === 'publish';
+  }
+})
 </script>
 {% include 'component/formItemListRender.html' %}
 {% include 'component/formItemAction.html' %}
 {% include 'component/upload.html' %}
 <script type="module">
-  new Vue({
-    el: '#app',
-    template: '#app-template',
-    vuetify: new Vuetify(),
-    vueComponent: "homework",
-    mixins: [window.jianghuUiActionMixins],
-    data: () => window.vueData,
-    created() {
-      const urlParams = new URLSearchParams(location.search);
-      this.articleId = urlParams.get('articleId');
-      this.action = urlParams.get('action');
-      // this.doAction('mineAssignment', {articleId: this.articleId});
-      this.doAction('getUserAssignment', {articleId: this.articleId});
-      // this.doAction('getLoginUserInfo');
+new Vue({
+  el: '#app',
+  template: '#app-template',
+  vuetify: new Vuetify(),
+  vueComponent: "homework",
+  mixins: [window.jianghuUiActionMixins],
+  data: () => window.vueData,
+  created() {
+    const urlParams = new URLSearchParams(location.search);
+    this.articleId = urlParams.get('articleId');
+    this.action = urlParams.get('action');
+    // this.doUiAction('mineAssignment', {articleId: this.articleId});
+    this.doUiAction('getUserAssignment', {articleId: this.articleId});
+    // this.doUiAction('getLoginUserInfo');
+  },
+  watch: {
+    articleNote: {
+      deep: true,
+      handler(value) {
+      }
+    }
+  },
+  mounted() {
+  },
+  methods: {
+    // 获取用户信息
+    async getLoginUserInfo() {
+      this.userInfo = await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'allPage',
+            actionId: 'userInfo',
+            actionData: {},
+          }
+        }
+      }).then(response => {
+        return response.data.appData;
+      }).catch(err => {
+        const {response} = err
+        if (response.data.appData) {
+          return response.data.appData;
+        }
+      });
     },
-    watch: {
-      articleNote: {
-        deep: true,
-        handler(value) { }
+    async confirmSubmitDialog() {
+      if (await window.confirmDialog({title: "作业提交之后不能继续修改", content: "确定提交吗？"}) === false) {
+        throw new Error("[confirmSubmitDialog] 否");
       }
     },
-    mounted() {
+    async submitArticleAssignment(item) {
+      await this.saveArticleAssignment(item);
     },
-    methods: {
-      async doAction(actionId, actionData) {
-        switch (actionId) {
-          case 'mineAssignment':
-            await this.mineAssignment(actionData);
-            break;
-          case 'getLoginUserInfo':
-            await this.getLoginUserInfo(actionData);
-            break;
-          case 'submitArticleAssignment':
-            await this.confirmSubmitDialog(actionData);
-            await this.submitArticleAssignment(actionData);
-            break;
-          case 'getUserAssignment':
-            await this.getUserAssignment(actionData);
-            break;
-          case 'saveArticleAssignment':
-            await this.saveArticleAssignment(actionData);
-            break;
-          default:
-            console.error("[doAction] actionId not find", { actionId });
-            break;
+    async saveArticleAssignment({publish, upload = false}) {
+      if (!upload && (this.assignmentLoading || this.saveing || this.submiting)) return;
+      const {assignmentId, assignmentSubmitStatus} = this.userAssignment;
+      if (!this.articleId) {
+        window.vtoast.fail("数据异常");
+        return false;
+      }
+      if (!upload && assignmentSubmitStatus === 'publish') {
+        window.vtoast.fail("作业已提交，不能修改");
+        return false;
+      }
+
+      if (publish && publish === 'publish') {
+        this.submiting = true;
+      } else {
+        this.saveing = true;
+      }
+
+      const assignmentUploadData = [...this.userFileList];
+      if (this.userAssignment.assignmentId && !upload) {
+        await this.assignmentUpload({data: assignmentUploadData});
+      }
+      const {assignmentFormItemListWithUser} = this.userAssignment;
+      const actionData = {
+        albumId: this.albumId,
+        baofengGroupId: this.groupId,
+        articleId: this.articleId,
+        assignmentFormItemListWithUser: JSON.stringify(assignmentFormItemListWithUser),
+      }
+      if (publish && publish === 'publish') {
+        actionData.assignmentSubmitStatus = 'publish';
+        actionData.assignmentSubmitAt = dayjs(new Date()).format();
+      }
+      ;
+      await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'assignmentHomework',
+            actionId: assignmentId ? "updateItem" : "insertItem",
+            where: assignmentId ? {assignmentId} : {},
+            actionData
+          }
         }
-      },
-      // 获取用户信息
-      async getLoginUserInfo() {
-        this.userInfo = await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'allPage',
-              actionId: 'userInfo',
-              actionData: {},
+      })
+      await this.getUserAssignment({articleId: this.articleId})
+      if (!assignmentId && !upload) {
+        await this.assignmentUpload({data: assignmentUploadData, load: true});
+      }
+      window.vtoast.success(this.submiting ? "提交成功" : "保存成功");
+      this.saveing = false;
+      this.submiting = false;
+    },
+    async getUserAssignment({articleId}) {
+      this.assignmentLoading = true;
+      const {rows} = (await window.jianghuAxios({
+        data: {
+          appData: {
+            pageId: 'assignmentHomework',
+            actionId: 'selectUserAssignmentList',
+            where: {
+              articleId,
+              baofengGroupId: this.groupId,
+              albumId: this.albumId,
             }
           }
-        }).then(response => {
-          return response.data.appData;
-        }).catch(err => {
-          const {response} = err
-          if (response.data.appData) {
-            return response.data.appData;
-          }
-        });
-      },
-      async confirmSubmitDialog() {
-        if (await window.confirmDialog({title: "作业提交之后不能继续修改", content: "确定提交吗？"}) === false) {
-          throw new Error("[confirmSubmitDialog] 否");
         }
-      },
-      async submitArticleAssignment(item) {
-        await this.saveArticleAssignment(item);
-      },
-      async saveArticleAssignment({publish, upload = false}) {
-        if (!upload && (this.assignmentLoading || this.saveing || this.submiting)) return ;
-        const {assignmentId, assignmentSubmitStatus} = this.userAssignment;
-        if (!this.articleId) {
-          window.vtoast.fail("数据异常");
-          return false;
+      })).data.appData.resultData;
+      if (rows.length) {
+        const userAssignment = rows[0];
+        userAssignment.assignmentFormItemListWithUser = JSON.parse(userAssignment.assignmentFormItemListWithUser || '[]');
+        const assignmentFormItemListWithAnswer = JSON.parse(userAssignment.assignmentFormItemListWithAnswer || '[]');
+        for (const item of userAssignment.assignmentFormItemListWithUser) {
+          const formItemWithAnswer = assignmentFormItemListWithAnswer.find(e => e.id === item.id);
+          const answerData = formItemWithAnswer.answerData || {};
+          item.answerData = answerData;
+          item.answerString = this.getAnswerString(item.component.title, answerData);
+          item.isRight = !Object.keys(item.userData).some(e => {
+            return item.userData[e] !== answerData[e];
+          });
         }
-        if (!upload && assignmentSubmitStatus === 'publish') {
-          window.vtoast.fail("作业已提交，不能修改");
-          return false;
-        }
-
-        if (publish && publish === 'publish') {
-          this.submiting = true;
-        } else {
-          this.saveing = true;
-        }
-
-        const assignmentUploadData = [...this.userFileList];
-        if (this.userAssignment.assignmentId && !upload) {
-          await this.assignmentUpload({data: assignmentUploadData});
-        }
-        const {assignmentFormItemListWithUser} = this.userAssignment;
-        const actionData = {
-          albumId: this.albumId,
-          baofengGroupId: this.groupId,
-          articleId: this.articleId,
-          assignmentFormItemListWithUser: JSON.stringify(assignmentFormItemListWithUser),
-        }
-        if (publish && publish === 'publish') {
-          actionData.assignmentSubmitStatus = 'publish';
-          actionData.assignmentSubmitAt = dayjs(new Date()).format();
-        };
-        await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'assignmentHomework',
-              actionId: assignmentId ? "updateItem" : "insertItem",
-              where: assignmentId ? {assignmentId} : {},
-              actionData
-            }
-          }
-        })
-        await this.getUserAssignment({articleId: this.articleId})
-        if (!assignmentId && !upload) {
-          await this.assignmentUpload({data: assignmentUploadData, load: true});
-        }
-        window.vtoast.success(this.submiting ? "提交成功" : "保存成功");
-        this.saveing = false;
-        this.submiting = false;
-      },
-      async getUserAssignment({articleId}) {
-        this.assignmentLoading = true;
+        this.userAssignment = userAssignment;
+        this.assignmentReview = JSON.parse(userAssignment.assignmentReview || '{}');
+      } else {
         const {rows} = (await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'assignmentHomework',
-              actionId: 'selectUserAssignmentList',
+              actionId: 'selectArticleInfo',
               where: {
-                articleId,
-                baofengGroupId: this.groupId,
-                albumId: this.albumId,
+                articleId
               }
             }
           }
         })).data.appData.resultData;
-        if (rows.length) {
-          const userAssignment = rows[0];
-          userAssignment.assignmentFormItemListWithUser = JSON.parse(userAssignment.assignmentFormItemListWithUser || '[]');
-          const assignmentFormItemListWithAnswer = JSON.parse(userAssignment.assignmentFormItemListWithAnswer || '[]');
-          for(const item of userAssignment.assignmentFormItemListWithUser) {
-            const formItemWithAnswer = assignmentFormItemListWithAnswer.find(e => e.id === item.id);
-            const answerData = formItemWithAnswer.answerData || {};
-            item.answerData = answerData;
-            item.answerString = this.getAnswerString(item.component.title, answerData);
-            item.isRight = !Object.keys(item.userData).some(e => {
-              return item.userData[e] !== answerData[e];
-            });
-          }
-          this.userAssignment = userAssignment;
-          this.assignmentReview = JSON.parse(userAssignment.assignmentReview || '{}');
-        } else {
-          const {rows} = (await window.jianghuAxios({
-            data: {
-              appData: {
-                pageId: 'assignmentHomework',
-                actionId: 'selectArticleInfo',
-                where: {
-                  articleId
-                }
-              }
-            }
-          })).data.appData.resultData;
-          if (!rows.length) {
-            window.vtoast('不存在的文章')
-          }
-          this.articleAssignment = JSON.parse(rows[0].articleAssignment);
-          if (!this.articleAssignment) {
-            this.userAssignment = {};
-            return
-          }
-          for (const item of this.articleAssignment) {
-            item.userData = {}
-          }
-          if (!this.userAssignment) {
-            this.userAssignment = {assignmentFormItemListWithUser: this.articleAssignment || []};
-          }
+        if (!rows.length) {
+          window.vtoast('不存在的文章')
         }
-        _.forEach(this.userAssignment.assignmentFormItemListWithUser, (item, index) => {
-          const fileList = {}
-          for (const type in item.file) {
-            fileList[type] = item.file[type];
+        this.articleAssignment = JSON.parse(rows[0].articleAssignment);
+        if (!this.articleAssignment) {
+          this.userAssignment = {};
+          return
+        }
+        for (const item of this.articleAssignment) {
+          item.userData = {}
+        }
+        if (!this.userAssignment) {
+          this.userAssignment = {assignmentFormItemListWithUser: this.articleAssignment || []};
+        }
+      }
+      _.forEach(this.userAssignment.assignmentFormItemListWithUser, (item, index) => {
+        const fileList = {}
+        for (const type in item.file) {
+          fileList[type] = item.file[type];
+        }
+        const fileType = [];
+        _.forEach(['img', 'audio', 'video'], (e, i) => {
+          if (item.upload.includes(e)) {
+            fileType.push(e)
           }
-          const fileType = [];
-          _.forEach(['img', 'audio', 'video'], (e, i) => {
-            if (item.upload.includes(e)) {
-              fileType.push(e)
-            }
-          })
-          this.userFileList.push({
-            id: item.id,
-            fileType,
-            fileList,
-          })
         })
-        this.assignmentLoading = false;
-      },
+        this.userFileList.push({
+          id: item.id,
+          fileType,
+          fileList,
+        })
+      })
+      this.assignmentLoading = false;
+    },
 
-      getAnswerString(type, data) {
-        switch (type) {
-          case "单选":
-            return data.selected;
-          case "多选":
-            return Object.keys(data).join(',');
-          case "问答":
-            return data.answer;
-          default :
-            return 'default';
-        }
-      },
-      async assignmentUpload({data, load = false}) {
-        let i = 1;
-        let that = this;
-        for (const index in data) {
-          for (const type in data[index].fileList) {
-            const file = data[index].fileList[type];
-            if (file && typeof file !== 'string') {
-              window.vtoast.loading(`附件${i}上传 上传进度: 0.00%`);
-              const path =`/assignmentMaterial/${this.userInfo.userId}/${this.userAssignment.assignmentId}/`;
-              const {data: {status} } = await window.jianghuAxios.httpUploadByStream({
-                file,
-                filenameStorage: file.name,
-                fileDirectory: path,
-                onProgress: (total, loaded) => {
-                  that.progress = Number((loaded * 100 / total).toFixed(2));
-                  window.vtoast.loading(`附件${i}上传 上传进度: ${that.progress}%`);
-                  if (loaded === total) {
-                    window.vtoast.success(`附件${i}上传 上传进度: 100%`);
-                  }
+    getAnswerString(type, data) {
+      switch (type) {
+        case "单选":
+          return data.selected;
+        case "多选":
+          return Object.keys(data).join(',');
+        case "问答":
+          return data.answer;
+        default :
+          return 'default';
+      }
+    },
+    async assignmentUpload({data, load = false}) {
+      let i = 1;
+      let that = this;
+      for (const index in data) {
+        for (const type in data[index].fileList) {
+          const file = data[index].fileList[type];
+          if (file && typeof file !== 'string') {
+            window.vtoast.loading(`附件${i}上传 上传进度: 0.00%`);
+            const path = `/assignmentMaterial/${this.userInfo.userId}/${this.userAssignment.assignmentId}/`;
+            const {data: {status}} = await window.jianghuAxios.httpUploadByStream({
+              file,
+              filenameStorage: file.name,
+              fileDirectory: path,
+              onProgress: (total, loaded) => {
+                that.progress = Number((loaded * 100 / total).toFixed(2));
+                window.vtoast.loading(`附件${i}上传 上传进度: ${that.progress}%`);
+                if (loaded === total) {
+                  window.vtoast.success(`附件${i}上传 上传进度: 100%`);
                 }
-              });
-              i++
-              if (status === 'success') {
-                this.userAssignment.assignmentFormItemListWithUser[index].file[type] = path + file.name;
-                this.userFileList[index].fileList[type] = 'sss'
               }
+            });
+            i++
+            if (status === 'success') {
+              this.userAssignment.assignmentFormItemListWithUser[index].file[type] = path + file.name;
+              this.userFileList[index].fileList[type] = 'sss'
             }
           }
         }
-        if (load) {
-          this.saveArticleAssignment({publish: '', upload: true})
-        }
-      },
-      dayjs: dayjs
-    }
-  })
+      }
+      if (load) {
+        this.saveArticleAssignment({publish: '', upload: true})
+      }
+    },
+    dayjs: dayjs
+  }
+})
 </script>
 <style>
 
 
-    @media screen and (max-width: 600px) {
-        .right-box {
-            padding-bottom: 130px !important;
-        }
-    }
+@media screen and (max-width: 600px) {
+  .right-box {
+    padding-bottom: 130px !important;
+  }
+}
 
-    .right-box .v-expansion-panel .v-expansion-panel-header {
-        min-height: auto;
-    }
-    .right-box .v-expansion-panel-content__wrap {
-        padding: 0px;
-    }
+.right-box .v-expansion-panel .v-expansion-panel-header {
+  min-height: auto;
+}
 
-    .right-box .v-expansion-panel .v-list-item__action, .v-list-item__avatar, .v-list-item__icon {
-        display: inline-block;
-        min-width: 24px;
-    }
-    .v-list-item {
-        height: unset;
-    }
+.right-box .v-expansion-panel-content__wrap {
+  padding: 0px;
+}
+
+.right-box .v-expansion-panel .v-list-item__action, .v-list-item__avatar, .v-list-item__icon {
+  display: inline-block;
+  min-width: 24px;
+}
+
+.v-list-item {
+  height: unset;
+}
 </style>
 <!--xfComments.html end-->
 

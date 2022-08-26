@@ -4,7 +4,7 @@
 
 <!--xfComments.html start-->
 <jh-layout-v3>
-  
+
   <template slot="breadcrumbsTitle">
     作业批改
     <span class="body-1 " style="font-weight: bold;">共计【{{userAssignment.assignmentFormItemListWithUser.length}}】个题目</span>
@@ -13,10 +13,10 @@
     <v-row class="ma-0 align-center flex-none pa-0" :class="{'pa-2': !isMobile, 'pa-2': isMobile}" align="center" style="height: 100%;">
       <v-col class="d-flex align-center" :class="{'pt-2': isMobile, 'pl-0': isMobile, 'pr-0': !isMobile}" style="justify-content: end">
         <span class="mr-2">作业批改-总分【{{assignmentScore}}】</span>
-        <v-btn elevation="0" color="primary" dark @click.stop="doAction('submitArticleAssignment', {})" >
+        <v-btn elevation="0" color="primary" dark @click.stop="doUiAction('submitArticleAssignment', {})" >
           保存批改
         </v-btn>
-        <v-btn elevation="0" style="margin-left: 20px" color="error" dark @click.stop="doAction('submitArticleAssignment', {publish: 'publish'})" >
+        <v-btn elevation="0" style="margin-left: 20px" color="error" dark @click.stop="doUiAction('submitArticleAssignment', {publish: 'publish'})" >
           提交批改
         </v-btn>
       </v-col>
@@ -31,21 +31,6 @@
 {% endblock %}
 
 {% block vue_body %}
-<script type="module">
-  window.registerData({
-    rightPanels: [0],
-    userAssignment: {
-      assignmentFormItemListWithUser: []
-    },
-    articleAssignmentList: [],
-    article: {},
-    userInfo: {},
-    action: '',
-    assignmentId: '',
-    reviewData: {},
-    assignmentList: []
-  })
-</script>
 
 {% include 'component/formItemListReview.html' %}
 <script type="module">
@@ -53,44 +38,43 @@
     el: '#app',
     template: '#app-template',
     vuetify: new Vuetify(),
-    vueComponent: "homework",
-    mixins: [window.jianghuUiActionMixins],
-    data: () => window.vueData,
-    computed: {
-      isApp() {
-        try {
-          return !!xuanfengApp;
-        } catch (err) {
-          return false;
-        }
+    data: () => ({
+      isMobile: window.innerWidth < 600,
+      rightPanels: [0],
+      userAssignment: {
+        assignmentFormItemListWithUser: []
       },
-      isMobile() {
-        return window.innerWidth < 600;
-      },
-      assignmentScore() {
-        let score = 0;
-        for(const key in this.reviewData) {
-          score += parseInt(this.reviewData[key].score || 0)
-        }
-        return score
-      }
-    },
+      articleAssignmentList: [],
+      article: {},
+      userInfo: {},
+      action: '',
+      assignmentId: '',
+      reviewData: {},
+      assignmentList: [],
+      assignmentScore: 0
+    }),
     created() {
       const urlParams = new URLSearchParams(location.search);
       this.assignmentId = urlParams.get('assignmentId');
       this.action = urlParams.get('action');
-      this.doAction('mineAssignment');
+      this.doUiAction('mineAssignment');
     },
     watch: {
       articleNote: {
         deep: true,
         handler(value) { }
+      },
+      reviewData: {
+        deep: true,
+        handler() {
+          this.reBuildAssignmentScore();
+        }
       }
     },
     mounted() {
     },
     methods: {
-      async doAction(actionId, actionData) {
+      async doUiAction(actionId, actionData) {
         switch (actionId) {
           case 'mineAssignment':
             await this.mineAssignment(actionData);
@@ -102,11 +86,18 @@
             await this.refreshData(actionData);
             break;
           default:
-            console.error("[doAction] actionId not find", { actionId });
+            console.error("[doUiAction] actionId not find", { actionId });
             break;
         }
       },
-      /** 
+      reBuildAssignmentScore() {
+        let score = 0;
+        for(const key in this.reviewData) {
+          score += parseInt(this.reviewData[key].score || 0)
+        }
+        this.assignmentScore = score;
+      },
+      /**
        * uiActionId:  mineAssignment
        * description: ✅获取用户作业
        * main:   [{"function":"mineAssignment"}]
@@ -182,7 +173,7 @@
         }
       },
 
-      /** 
+      /**
        * uiActionId:  submitArticleAssignment
        * description: ✅提交作业
        * main:   [{"vueComponent":"homework","function":"submitArticleAssignment"}]
@@ -213,7 +204,7 @@
       },
 
       async refreshData() {
-        this.doAction('mineAssignment');
+        this.doUiAction('mineAssignment');
       },
       dayjs: dayjs
     }
