@@ -74,16 +74,16 @@
     mounted() {
     },
     methods: {
-      async doUiAction(actionId, actionData) {
+      async doUiAction(actionId, uiActionData) {
         switch (actionId) {
           case 'mineAssignment':
-            await this.mineAssignment(actionData);
-            await this.assignmentData(actionData);
+            await this.mineAssignment(uiActionData);
+            await this.assignmentData(uiActionData);
             break;
           case 'submitArticleAssignment':
-            await this.prepareValidate(actionData);
-            await this.submitArticleAssignment(actionData);
-            await this.refreshData(actionData);
+            await this.prepareValidate(uiActionData);
+            await this.submitArticleAssignment(uiActionData);
+            await this.refreshData(uiActionData);
             break;
           default:
             console.error("[doUiAction] actionId not find", { actionId });

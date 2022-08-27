@@ -87,7 +87,6 @@ new Vue({
   el: '#app',
   template: '#app-template',
   vuetify: new Vuetify(),
-  mixins: [window.jianghuUiActionMixins],
   data: () => ({
     // 表格相关数据
     isFormValid: true,
@@ -174,13 +173,13 @@ new Vue({
   },
   mounted() {},
   methods: {
-    async doUiAction(actionId, actionData) {
+    async doUiAction(actionId, uiActionData) {
         switch (actionId) {
           case 'refreshTableData':
-            await this.refreshTableData(actionData);
+            await this.refreshTableData(uiActionData);
             break;
           case 'assignmentReview':
-            await this.goToAssignmentReviewPage(actionData);
+            await this.goToAssignmentReviewPage(uiActionData);
             break;
           default:
             console.error("[doUiAction] actionId not find", { actionId });

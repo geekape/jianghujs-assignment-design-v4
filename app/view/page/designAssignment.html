@@ -87,18 +87,18 @@
     },
     mounted() {},
     methods: {
-      async doUiAction(actionId, actionData) {
+      async doUiAction(actionId, uiActionData) {
         switch (actionId) {
           case 'selectArticleAssignment':
-            await this.selectArticleAssignment(actionData);
-            await this.buildArticleAssignmentWithAnswer(actionData);
+            await this.selectArticleAssignment(uiActionData);
+            await this.buildArticleAssignmentWithAnswer(uiActionData);
             break;
           case 'saveArticleAssignment':
-            await this.vaildArticleAssignment(actionData);
-            await this.buildAssignmentItemFile(actionData);
-            await this.createSaveActionData(actionData);
-            await this.saveArticleAssignmentRequest(actionData);
-            await this.syncArticleAssignmentPublishStatus(actionData);
+            await this.vaildArticleAssignment(uiActionData);
+            await this.buildAssignmentItemFile(uiActionData);
+            await this.createSaveActionData(uiActionData);
+            await this.saveArticleAssignmentRequest(uiActionData);
+            await this.syncArticleAssignmentPublishStatus(uiActionData);
             break;
           default:
             console.error("[doUiAction] actionId not find", { actionId });
