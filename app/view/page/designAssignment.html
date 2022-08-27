@@ -87,8 +87,8 @@
     },
     mounted() {},
     methods: {
-      async doUiAction(actionId, uiActionData) {
-        switch (actionId) {
+      async doUiAction(uiActionId, uiActionData) {
+        switch (uiActionId) {
           case 'selectArticleAssignment':
             await this.selectArticleAssignment(uiActionData);
             await this.buildArticleAssignmentWithAnswer(uiActionData);
@@ -101,7 +101,7 @@
             await this.syncArticleAssignmentPublishStatus(uiActionData);
             break;
           default:
-            console.error("[doUiAction] actionId not find", { actionId });
+            console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
         }
       },

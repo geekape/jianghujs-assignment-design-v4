@@ -141,8 +141,8 @@
     async mounted() {
     },
     methods: {
-      async doUiAction(actionId, uiActionData) {
-          switch (actionId) {
+      async doUiAction(uiActionId, uiActionData) {
+          switch (uiActionId) {
             case 'refreshTableData':
               await this.refreshTableData(uiActionData);
               break;
@@ -181,7 +181,7 @@
               await this.goHomeworkPage(uiActionData);
               break;
             default:
-              console.error("[doUiAction] actionId not find", { actionId });
+              console.error("[doUiAction] uiActionId not find", { uiActionId });
               break;
           }
       },

@@ -74,8 +74,8 @@
     mounted() {
     },
     methods: {
-      async doUiAction(actionId, uiActionData) {
-        switch (actionId) {
+      async doUiAction(uiActionId, uiActionData) {
+        switch (uiActionId) {
           case 'mineAssignment':
             await this.mineAssignment(uiActionData);
             await this.assignmentData(uiActionData);
@@ -86,7 +86,7 @@
             await this.refreshData(uiActionData);
             break;
           default:
-            console.error("[doUiAction] actionId not find", { actionId });
+            console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
         }
       },
