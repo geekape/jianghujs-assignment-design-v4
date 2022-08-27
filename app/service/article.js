@@ -63,15 +63,15 @@ class ArticleService extends Service {
 
     await jianghuKnex(tableEnum.article, this.ctx).where({ articleId }).update({ articlePublishStatus: articlePublishStatusEnum.deleted });
 
-    const articleDirPath = path.join(articleMaterialDir, `${articleId}`);
-    const articleRecycleDirPath = path.join(articleMaterialDir, '_recycle', `${articleId}`);
-    if (!await exists(articleDirPath)) {
-        return;
-    }
-    if (await exists(articleRecycleDirPath)) {
-      await unlink(articleRecycleDirPath);
-    }
-    await rename(articleDirPath, articleRecycleDirPath)
+    // const articleDirPath = path.join(articleMaterialDir, `${articleId}`);
+    // const articleRecycleDirPath = path.join(articleMaterialDir, '_recycle', `${articleId}`);
+    // if (!await exists(articleDirPath)) {
+    //     return;
+    // }
+    // if (await exists(articleRecycleDirPath)) {
+    //   await unlink(articleRecycleDirPath);
+    // }
+    // await rename(articleDirPath, articleRecycleDirPath)
   }
 
   async restoreArticle() {

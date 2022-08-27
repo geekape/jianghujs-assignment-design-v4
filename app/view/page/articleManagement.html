@@ -196,6 +196,9 @@
             appData: {
               pageId: 'articleManagement',
               actionId: 'selectItemList',
+              where: {
+                articlePublishStatus: null
+              },
               whereLike: {
                 articleTitle: this.serverSearchInput.articleTitle,
               },
@@ -310,9 +313,10 @@
           data: {
             appData: {
               pageId: 'articleManagement',
-              actionId: 'jhDeletedItem',
-              actionData: {},
-              where: { id: item.id }
+              actionId: 'deletedArticle',
+              actionData: {
+                articleId: item.articleId
+              }
             }
           }
         });

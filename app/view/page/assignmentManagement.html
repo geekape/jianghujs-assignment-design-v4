@@ -199,13 +199,23 @@ new Vue({
           appData: {
             pageId: 'assignmentManagement',
             actionId: 'selectItemList',
+            actionData: { assignmentSubmitStatus, assignmentReviewStatus },
             orderBy: [{column: 'operationAt', order: 'desc'}],
             limit: this.serverSearchInput.isFirstSearch ? 200 : 99999999,
-            whereIn: { assignmentSubmitStatus, assignmentReviewStatus }
           }
         }
       })).data.appData.resultData;
-      this.tableDataFromBackend = rows;
+      this.tableDataFromBackend = rows.filter(item => {
+        if(assignmentSubmitStatus.length && assignmentReviewStatus.length){
+          return assignmentSubmitStatus.includes(item.assignmentSubmitStatus) && assignmentReviewStatus.includes(item.assignmentReviewStatus)
+        }else if(assignmentSubmitStatus.length){
+          return assignmentSubmitStatus.includes(item.assignmentSubmitStatus) 
+        }else if(assignmentReviewStatus.length){
+          return assignmentReviewStatus.includes(item.assignmentReviewStatus) 
+        }else{
+          return true;
+        }
+      });
       this.isTableLoading = false;
       // Tip 这个放最后
       this.serverSearchInput.isFirstSearch  = false;

@@ -33,4 +33,8 @@ module.exports = {
   },
 };
 
-
+module.exports.articlePublishStatusEnum = Object.freeze({
+  login: "login",
+  draft: "draft",
+  deleted: "deleted",
+});
