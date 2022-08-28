@@ -309,14 +309,14 @@
        */
       async doDeleteItem({item}) {
         await window.vtoast.loading("删除数据");
-        const result = await window.jianghuAxios({
+        const articleId = item.articleId;
+        await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'articleManagement',
               actionId: 'deletedArticle',
-              actionData: {
-                articleId: item.articleId
-              }
+              actionData: {},
+              where:{articleId: articleId}
             }
           }
         });
