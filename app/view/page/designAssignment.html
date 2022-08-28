@@ -75,10 +75,10 @@
     },
     async created() {
       const urlParams = new URLSearchParams(location.search);
-      const articleId = urlParams.get('articleId');
+      const articleTitle = urlParams.get('articleTitle');
       const title = urlParams.get('title');
-      if (articleId) {
-        this.articleId = articleId;
+      if (articleTitle) {
+        this.articleTitle = articleTitle;
       }
       if (title) {
         this.title = title;

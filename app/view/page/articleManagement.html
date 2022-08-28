@@ -336,14 +336,14 @@
 
       // 跳转作业详情
       goToAssignmentDesignPage({item}) {
-        const { articleId } = item;
-        window.open(`/${window.appInfo.appId}/page/designAssignment?articleId=${articleId}`, '_self');
+        const { articleTitle } = item;
+        window.open(`/${window.appInfo.appId}/page/designAssignment?articleId=${articleTitle}&title=${articleTitle}`);
       },
 
       // 跳转做作业
       goHomeworkPage({item}) {
-        const { articleId } = item;
-        window.open(`/${window.appInfo.appId}/page/assignmentHomework?articleId=${articleId}`, '_self');
+        const { articleTitle } = item;
+        window.open(`/${window.appInfo.appId}/page/assignmentHomework?articleId=${articleTitle}&title=${articleTitle}`);
       }
     }
   })
