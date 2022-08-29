@@ -121,8 +121,8 @@
         const result = await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'assignmentDesign',
-              actionId: 'selectArticleAssignment',
+              pageId: 'designAssignment',
+              actionId: 'selectAssignment',
               where: { articleId: this.articleId }
             }
           }
@@ -190,8 +190,8 @@
         await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'assignmentDesign',
-              actionId: 'updateArticleAssignment',
+              pageId: 'designAssignment',
+              actionId: 'updateAssignment',
               actionData: this.saveActionData,
               where: {articleId: this.articleId}
             }
