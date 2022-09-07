@@ -147,12 +147,14 @@
       },
 
       getAnswerString(type, data) {
+        debugger
         switch (type) {
           case "单选":
             return data.selected;
           case "多选":
             return Object.keys(data).join(',');
           case "问答":
+          case "多行文本":
             return data.answer;
           default :
             return 'default';
