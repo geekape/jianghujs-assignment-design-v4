@@ -37,9 +37,6 @@ CREATE TABLE `_constant` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 57 COMMENT = '常量表; 软删除未启用;';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _constant
-# ------------------------------------------------------------
 
 INSERT INTO `_constant` (`id`,`constantKey`,`constantType`,`desc`,`constantValue`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (1,'version','object','版本','{ \"version\": \"1.0.5\", \"title\": \"1.0.5版本发布\", \"note\": \"新版本特性\"  }','insert',NULL,NULL,NULL);
 INSERT INTO `_constant` (`id`,`constantKey`,`constantType`,`desc`,`constantValue`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (2,'gender','select','性别','[{\"value\": \"male\", \"text\": \"男\"}, {\"value\": \"female\", \"text\": \"女\"}]','insert',NULL,NULL,NULL);
@@ -100,9 +97,6 @@ CREATE TABLE `_group` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 COMMENT = '群组表; 软删除未启用;';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _group
-# ------------------------------------------------------------
 
 INSERT INTO `_group` (`id`,`groupId`,`groupName`,`groupDesc`,`groupAvatar`,`groupExtend`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (1,'adminGroup','管理组','管理组',NULL,'{}','jhUpdate','admin','admin','2022-02-18T20:45:25+08:00');
 
@@ -128,9 +122,6 @@ CREATE TABLE `_page` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 10 COMMENT = '页面表; 软删除未启用;';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _page
-# ------------------------------------------------------------
 
 INSERT INTO `_page` (`id`,`pageId`,`pageName`,`pageFile`,`pageType`,`sort`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (1,'help','帮助','helpV3','common',NULL,'jhUpdate','admin','adminName','2022-05-02T15:08:43+08:00');
 INSERT INTO `_page` (`id`,`pageId`,`pageName`,`pageFile`,`pageType`,`sort`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (2,'login','登陆','loginV3','common',NULL,'insert',NULL,NULL,NULL);
@@ -190,9 +181,6 @@ CREATE TABLE `_resource` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 532 COMMENT = '请求资源表; 软删除未启用; resourceId=`${appId}.${pageId}.${actionId}`';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _resource
-# ------------------------------------------------------------
 
 INSERT INTO `_resource` (`id`,`accessControlTable`,`resourceHook`,`pageId`,`actionId`,`desc`,`resourceType`,`appDataSchema`,`resourceData`,`requestDemo`,`responseDemo`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (1,NULL,NULL,'allPage','getChunkInfo','✅ 文件分片下载-获取分片信息','service','{}','{\"service\": \"file\", \"serviceFunction\": \"getChunkInfo\"}','','','jhUpdate','admin','adminName','2022-05-03T12:46:39+08:00');
 INSERT INTO `_resource` (`id`,`accessControlTable`,`resourceHook`,`pageId`,`actionId`,`desc`,`resourceType`,`appDataSchema`,`resourceData`,`requestDemo`,`responseDemo`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (2,NULL,NULL,'allPage','uploadFileDone','✅ 文件分片上传-所有分片上传完毕','service','{}','{\"service\": \"file\", \"serviceFunction\": \"uploadFileDone\"}','','','update',NULL,NULL,'2022-09-08T15:43:09+08:00');
@@ -276,9 +264,6 @@ CREATE TABLE `_role` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 4 COMMENT = '角色表; 软删除未启用;';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _role
-# ------------------------------------------------------------
 
 INSERT INTO `_role` (`id`,`roleId`,`roleName`,`roleDesc`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (1,'appAdmin','系统管理员',NULL,NULL,NULL,NULL,NULL);
 INSERT INTO `_role` (`id`,`roleId`,`roleName`,`roleDesc`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (2,'teacher','老师',NULL,NULL,NULL,NULL,NULL);
@@ -306,9 +291,6 @@ CREATE TABLE `_test_case` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 86 COMMENT = '测试用例表';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _test_case
-# ------------------------------------------------------------
 
 INSERT INTO `_test_case` (`id`,`pageId`,`testId`,`testName`,`uiActionIdList`,`testOpeartion`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (82,'login','test','123',NULL,'123','insert','vscode','vscode','2022-06-11T15:40:48+08:00');
 INSERT INTO `_test_case` (`id`,`pageId`,`testId`,`testName`,`uiActionIdList`,`testOpeartion`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (83,'designAssignment','test','et',NULL,'et','update','vscode','vscode','2022-06-11T20:49:23+08:00');
@@ -337,9 +319,6 @@ CREATE TABLE `_ui` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 196 COMMENT = 'ui 施工方案';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _ui
-# ------------------------------------------------------------
 
 
 
@@ -371,9 +350,6 @@ CREATE TABLE `_user` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 70 COMMENT = '用户表';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _user
-# ------------------------------------------------------------
 
 INSERT INTO `_user` (`id`,`idSequence`,`userId`,`username`,`clearTextPassword`,`password`,`md5Salt`,`userStatus`,`userType`,`config`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`,`initPassword`) VALUES (1,NULL,'admin','adminName','123456','f0cc7a42ef0c399737c024202b1aaa3f','9PMF7J7VPsUy','active','common',NULL,'jhUpdate','admin','admin','2022-04-28T20:34:41+08:00',NULL);
 INSERT INTO `_user` (`id`,`idSequence`,`userId`,`username`,`clearTextPassword`,`password`,`md5Salt`,`userStatus`,`userType`,`config`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`,`initPassword`) VALUES (68,'26260000','001','小华','1234567','b9e96d6ebc84dd51f2bd1fb56a79d8cb','ZsPkQcHpYZQT','active','common',NULL,'jhUpdate','admin','adminName','2022-05-02T15:23:57+08:00',NULL);
@@ -401,9 +377,6 @@ CREATE TABLE `_user_group_role` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 599 COMMENT = '用户群组角色关联表; 软删除未启用;';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _user_group_role
-# ------------------------------------------------------------
 
 INSERT INTO `_user_group_role` (`id`,`userId`,`groupId`,`roleId`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (568,'admin','adminGroup','appAdmin','insert',NULL,NULL,NULL);
 INSERT INTO `_user_group_role` (`id`,`userId`,`groupId`,`roleId`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (597,'001','adminGroup','teacher','jhInsert','admin','admin','2022-02-21T00:41:54+08:00');
@@ -432,16 +405,10 @@ CREATE TABLE `_user_group_role_page` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 23 COMMENT = '用户群组角色 - 页面 映射表; 软删除未启用;';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _user_group_role_page
-# ------------------------------------------------------------
 
 INSERT INTO `_user_group_role_page` (`id`,`user`,`group`,`role`,`page`,`allowOrDeny`,`desc`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (1,'*','public','*','login','allow','登陆页面; 开放所有用户;','insert',NULL,NULL,NULL);
 INSERT INTO `_user_group_role_page` (`id`,`user`,`group`,`role`,`page`,`allowOrDeny`,`desc`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (2,'*','login','*','help,manual','allow','工具页; 开放给登陆用户;','insert',NULL,NULL,NULL);
 INSERT INTO `_user_group_role_page` (`id`,`user`,`group`,`role`,`page`,`allowOrDeny`,`desc`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (3,'*','login','*','*','allow','所有页面; 开放给登陆用户;','insert',NULL,NULL,NULL);
-
-
-
 
 
 
@@ -466,16 +433,10 @@ CREATE TABLE `_user_group_role_resource` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 75 COMMENT = '用户群组角色 - 请求资源 映射表; 软删除未启用;';
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: _user_group_role_resource
-# ------------------------------------------------------------
 
 INSERT INTO `_user_group_role_resource` (`id`,`user`,`group`,`role`,`resource`,`allowOrDeny`,`desc`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (1,'*','public','*','login.passwordLogin','allow','登陆resource, 开放给所有用户','insert',NULL,NULL,NULL);
 INSERT INTO `_user_group_role_resource` (`id`,`user`,`group`,`role`,`resource`,`allowOrDeny`,`desc`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (2,'*','login','*','allPage.*','allow','工具类resource, 开放给所有登陆成功的用户','insert',NULL,NULL,NULL);
 INSERT INTO `_user_group_role_resource` (`id`,`user`,`group`,`role`,`resource`,`allowOrDeny`,`desc`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (3,'*','login','*','*','allow','所有resource, 开放给所有登陆成功的用户','insert',NULL,NULL,NULL);
-
-
-
 
 
 
@@ -529,6 +490,8 @@ CREATE TABLE `article` (
 
 
 
+
+
 # ------------------------------------------------------------
 # SCHEMA DUMP FOR TABLE: assignment
 # ------------------------------------------------------------
@@ -556,9 +519,6 @@ CREATE TABLE `assignment` (
 ) ENGINE = InnoDB AUTO_INCREMENT = 434;
 
 
-# ------------------------------------------------------------
-# DATA DUMP FOR TABLE: assignment
-# ------------------------------------------------------------
 
 INSERT INTO `assignment` (`id`,`assignmentId`,`articleId`,`userId`,`assignmentScore`,`assignmentSubmitStatus`,`assignmentSubmitAt`,`assignmentFormItemListWithUser`,`assignmentFormItemListWithAnswer`,`assignmentReviewUserId`,`assignmentReview`,`assignmentReviewStatus`,`assignmentReviewAt`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (429,'37557_m3995Q_728723','37557','m3995Q',31,NULL,NULL,'[{\"id\":\"singleSelect_6lZPyOFC\",\"component\":{\"title\":\"单选\",\"type\":\"singleSelect\",\"outline\":\"单选题 题纲\",\"property\":{\"selectOptionList\":[{\"value\":\"a\"},{\"value\":\"b\"},{\"value\":\"c\"}]},\"icon\":\"mdi-checkbox-marked-circle\"},\"upload\":[\"img\",\"audio\"],\"file\":{\"img\":\"/assignmentMaterial/m3995Q/37557_m3995Q_728723/answer-time-right-toast (4).png\",\"audio\":\"/assignmentMaterial/m3995Q/37557_m3995Q_728723/answer-time-start-1.mp3\"},\"answerData\":{\"selected\":\"a\"},\"userData\":{\"selected\":\"b\"},\"answerString\":\"a\",\"isRight\":false,\"reviewData\":{\"score\":\"10\",\"comment\":\"这个错误的\"}},{\"id\":\"multipleSelect_1zo4Hs-N\",\"component\":{\"title\":\"多选\",\"type\":\"multipleSelect\",\"outline\":\"多选题 题纲1\",\"property\":{\"selectOptionList\":[{\"value\":\"a\"},{\"value\":\"b\"}]},\"icon\":\"mdi-checkbox-marked\"},\"upload\":[\"img\"],\"file\":{\"img\":\"/assignmentMaterial/m3995Q/37557_m3995Q_728723/answer-time-right-toast (6).png\"},\"answerData\":{\"a\":true,\"b\":true},\"userData\":{\"b\":false,\"a\":true},\"answerString\":\"a,b\",\"isRight\":false,\"reviewData\":{\"score\":\"20\",\"comment\":\"这个不对\"}},{\"id\":\"singleSelect_6z6TvopM\",\"component\":{\"title\":\"单选\",\"type\":\"singleSelect\",\"outline\":\"单选题 题纲\",\"property\":{\"selectOptionList\":[{\"value\":\"a\"},{\"value\":\"b\"}]},\"icon\":\"mdi-checkbox-marked-circle\"},\"upload\":[],\"file\":{},\"answerData\":{\"selected\":\"a\"},\"userData\":{\"selected\":\"a\"},\"answerString\":\"a\",\"isRight\":true,\"reviewData\":{\"score\":\"1\"}}]','[{\"id\":\"singleSelect_6lZPyOFC\",\"component\":{\"title\":\"单选\",\"type\":\"singleSelect\",\"outline\":\"单选题 题纲\",\"property\":{\"selectOptionList\":[{\"value\":\"a\"},{\"value\":\"b\"},{\"value\":\"c\"}]},\"icon\":\"mdi-checkbox-marked-circle\"},\"upload\":[\"img\",\"audio\"],\"file\":{\"img\":\"\",\"audio\":\"\"},\"answerData\":{\"selected\":\"a\"}},{\"id\":\"multipleSelect_1zo4Hs-N\",\"component\":{\"title\":\"多选\",\"type\":\"multipleSelect\",\"outline\":\"多选题 题纲1\",\"property\":{\"selectOptionList\":[{\"value\":\"a\"},{\"value\":\"b\"}]},\"icon\":\"mdi-checkbox-marked\"},\"upload\":[\"img\"],\"file\":{\"img\":\"\"},\"answerData\":{\"a\":true,\"b\":true}},{\"id\":\"singleSelect_6z6TvopM\",\"component\":{\"title\":\"单选\",\"type\":\"singleSelect\",\"outline\":\"单选题 题纲\",\"property\":{\"selectOptionList\":[{\"value\":\"a\"},{\"value\":\"b\"}]},\"icon\":\"mdi-checkbox-marked-circle\"},\"upload\":[],\"file\":{},\"answerData\":{\"selected\":\"a\"}}]','m3995Q',NULL,NULL,'2022-05-19T16:57:41+08:00','jhUpdate','m3995Q','雪园','2022-05-19T16:57:41+08:00');
 INSERT INTO `assignment` (`id`,`assignmentId`,`articleId`,`userId`,`assignmentScore`,`assignmentSubmitStatus`,`assignmentSubmitAt`,`assignmentFormItemListWithUser`,`assignmentFormItemListWithAnswer`,`assignmentReviewUserId`,`assignmentReview`,`assignmentReviewStatus`,`assignmentReviewAt`,`operation`,`operationByUserId`,`operationByUser`,`operationAt`) VALUES (430,'10000_admin_931971','10000','admin',10,'publish','2022-08-08T21:51:20+08:00','[{\"id\":\"textarea_ADK5J2Kh\",\"component\":{\"title\":\"多行文本\",\"type\":\"textarea\",\"outline\":\"多行文本\",\"property\":{},\"icon\":\"mdi-form-textarea\"},\"upload\":[],\"file\":{},\"answerData\":{\"answer\":\"123\"},\"userData\":{},\"answerString\":\"default\",\"isRight\":true},{\"id\":\"singleSelect_3FEoT5wE\",\"component\":{\"title\":\"单选\",\"type\":\"singleSelect\",\"outline\":\"单选\",\"property\":{\"selectOptionList\":[{\"value\":\"1\"},{\"value\":\"2\"}]},\"icon\":\"mdi-checkbox-marked-circle\"},\"upload\":[],\"file\":{},\"answerData\":{\"selected\":\"1\"},\"userData\":{\"selected\":\"2\"},\"answerString\":\"1\",\"isRight\":false},{\"id\":\"multipleSelect_qyR4Vaf0\",\"component\":{\"title\":\"多选\",\"type\":\"multipleSelect\",\"outline\":\"多选\",\"property\":{\"selectOptionList\":[{\"value\":\"1\"},{\"value\":\"2\"},{\"value\":\"3\"}]},\"icon\":\"mdi-checkbox-marked\"},\"upload\":[],\"file\":{},\"answerData\":{\"2\":true,\"3\":true},\"userData\":{\"1\":true,\"2\":true},\"answerString\":\"2,3\",\"isRight\":false}]','[{\"id\":\"textarea_ADK5J2Kh\",\"component\":{\"title\":\"多行文本\",\"type\":\"textarea\",\"outline\":\"多行文本\",\"property\":{},\"icon\":\"mdi-form-textarea\"},\"upload\":[],\"file\":{},\"answerData\":{\"answer\":\"123\"}},{\"id\":\"singleSelect_3FEoT5wE\",\"component\":{\"title\":\"单选\",\"type\":\"singleSelect\",\"outline\":\"单选\",\"property\":{\"selectOptionList\":[{\"value\":\"1\"},{\"value\":\"2\"}]},\"icon\":\"mdi-checkbox-marked-circle\"},\"upload\":[],\"file\":{},\"answerData\":{\"selected\":\"1\"}},{\"id\":\"multipleSelect_qyR4Vaf0\",\"component\":{\"title\":\"多选\",\"type\":\"multipleSelect\",\"outline\":\"多选\",\"property\":{\"selectOptionList\":[{\"value\":\"1\"},{\"value\":\"2\"},{\"value\":\"3\"}]},\"icon\":\"mdi-checkbox-marked\"},\"upload\":[],\"file\":{},\"answerData\":{\"2\":true,\"3\":true}}]',NULL,'{\"textarea_ADK5J2Kh\":{\"score\":\"10\",\"comment\":\"\"},\"singleSelect_3FEoT5wE\":{\"score\":\"\",\"comment\":\"\"},\"multipleSelect_qyR4Vaf0\":{\"score\":\"\",\"comment\":\"\"}}','publish',NULL,'jhUpdate','admin','adminName','2022-08-25T17:52:58+08:00');
