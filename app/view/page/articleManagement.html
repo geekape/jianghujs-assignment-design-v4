@@ -191,7 +191,7 @@
       async refreshTableData() {
         this.isTableLoading = true;
         const serverSearchInput = _.pickBy(this.serverSearchInput, value => !!value);
-        const { data: { appData: { rows, count } } } = await window.jianghuAxios({
+        const { data: { appData: { resultData: {rows, count} } } } = await window.jianghuAxios({
           data: {
             appData: {
               pageId: 'articleManagement',
@@ -316,7 +316,7 @@
             appData: {
               pageId: 'articleManagement',
               actionId: 'deletedArticle',
-              actionData: {articleId},   
+              actionData: {articleId},
             }
           }
         });

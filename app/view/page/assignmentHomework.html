@@ -111,11 +111,11 @@ new Vue({
           }
         }
       }).then(response => {
-        return response.data.appData;
+        return response.data.appData.resultData;
       }).catch(err => {
         const {response} = err
         if (response.data.appData) {
-          return response.data.appData;
+          return response.data.appData.resultData;
         }
       });
     },
